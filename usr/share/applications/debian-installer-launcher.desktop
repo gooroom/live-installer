@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Install Linux Mint
+Name=Install Gooroom Platform
 GenericName=Live Installer
 Comment=Install the operating system to disk
 Exec=gksudo /usr/bin/live-installer

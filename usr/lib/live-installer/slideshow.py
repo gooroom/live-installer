@@ -8,13 +8,17 @@ import string
 import threading
 
 pages = [
-'welcome.html',
-'giants.html',
-'desktop-ready.html',
-'windows.html',
-'safe.html',
-'community.html'
+'welcome.html'
 ]
+
+#pages = [
+#'welcome.html',
+#'giants.html',
+#'desktop-ready.html',
+#'windows.html',
+#'safe.html',
+#'community.html'
+#]
 
 class Slideshow(threading.Thread):
     def __init__(self, webviewObject, slideshowDirectory, language='', intervalSeconds=30, loopPages=False):
