@@ -1,3 +1,9 @@
+live-installer (0.1) gooroom; urgency=medium
+
+  * Initial Release on Gooroom
+
+ -- gooroom <gooroom@gooroom.kr>  Tue, 07 Jun 2016 17:44:46 +0900
+
 live-installer (2015.09.19) betsy; urgency=medium
 
   * Partitioning: Don't read flags on inactive partitions
