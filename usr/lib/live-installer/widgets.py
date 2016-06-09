@@ -6,7 +6,7 @@ import os
 import gettext
 import PIL.Image
 
-gettext.install("live-installer", "/usr/share/linuxmint/locale")
+gettext.install("live-installer", "/usr/share/gooroom/locale")
 
 
 class PictureChooserButton (gtk.Button):

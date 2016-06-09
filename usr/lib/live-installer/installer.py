@@ -9,7 +9,7 @@ import commands
 import sys
 import parted
 
-gettext.install("live-installer", "/usr/share/linuxmint/locale")
+gettext.install("live-installer", "/usr/share/gooroom/locale")
 
 CONFIG_FILE = '/etc/live-installer/live-installer.conf'
 
@@ -252,8 +252,8 @@ class InstallerEngine:
             print "WARNING: No initrd found!!"
 
         if (setup.gptonefi):
-            os.system("mkdir -p /target/boot/efi/EFI/linuxmint")
-            os.system("cp /lib/live/mount/medium/EFI/BOOT/grubx64.efi /target/boot/efi/EFI/linuxmint")
+            os.system("mkdir -p /target/boot/efi/EFI/gooroom")
+            os.system("cp /lib/live/mount/medium/EFI/BOOT/grubx64.efi /target/boot/efi/EFI/gooroom")
             os.system("mkdir -p /target/debs")
             os.system("cp /lib/live/mount/medium/pool/main/g/grub2/grub-efi* /target/debs/")
             os.system("cp /lib/live/mount/medium/pool/main/e/efibootmgr/efibootmgr* /target/debs/")
@@ -418,7 +418,7 @@ class InstallerEngine:
             self.do_run_in_chroot("dpkg -i /debs/*")
             os.system("rm -rf /target/debs")
 
-        if os.path.exists("/etc/linuxmint/info"):
+        if os.path.exists("/etc/gooroom/info"):
             # drivers
             print " --> Installing drivers"
             self.update_progress(total=our_total, current=our_current, message=_("Installing drivers"))
@@ -472,8 +472,8 @@ class InstallerEngine:
         self.do_run_in_chroot("mv /etc/default/keyboard.new /etc/default/keyboard")
 
         # Perform OS adjustments (this is needed prior to installing grub)
-        if os.path.exists("/target/usr/lib/linuxmint/mintSystem/mint-adjust.py"):
-            self.do_run_in_chroot("/usr/lib/linuxmint/mintSystem/mint-adjust.py")
+        if os.path.exists("/target/usr/lib/gooroom/gooroomSystem/gooroom-adjust.py"):
+            self.do_run_in_chroot("/usr/lib/gooroom/gooroomSystem/gooroom-adjust.py")
 
         # write MBR (grub)
         print " --> Configuring Grub"
@@ -553,10 +553,10 @@ class InstallerEngine:
             grubfh = open("/target/boot/grub/grub.cfg", "r")
             for line in grubfh:
                 line = line.rstrip("\r\n")
-                if("06_mint_theme" in line):
+                if("06_gooroom_theme" in line):
                     found_theme = True
                     print " --> Found Grub theme: %s " % line
-                if ("menuentry" in line and "class linuxmint" in line):
+                if ("menuentry" in line and "class Gooroom" in line):
                     found_entry = True
                     print " --> Found Grub entry: %s " % line
             grubfh.close()

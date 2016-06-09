@@ -14,7 +14,7 @@ import parted
 import commands
 import gettext
 
-gettext.install("live-installer", "/usr/share/linuxmint/locale")
+gettext.install("live-installer", "/usr/share/gooroom/locale")
 
 def shell_exec(command):
     return subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
@@ -420,8 +420,8 @@ class Partition(object):
             self.free_space = to_human_readable(int(free)*1024)  # df returns values in 1024B-blocks by default
             self.used_percent = self.used_percent.strip('%') or 0
             description = ''
-            if path_exists(mount_point, 'etc/linuxmint/info'):
-                description = getoutput("cat %s/etc/linuxmint/info | grep GRUB_TITLE" % mount_point).replace('GRUB_TITLE', '').replace('=', '').replace('"', '').strip()
+            if path_exists(mount_point, 'etc/gooroom/info'):
+                description = getoutput("cat %s/etc/gooroom/info | grep GRUB_TITLE" % mount_point).replace('GRUB_TITLE', '').replace('=', '').replace('"', '').strip()
             elif path_exists(mount_point, 'Windows/servicing/Version'):
                 description = 'Windows ' + {
                     '6.4':'10',

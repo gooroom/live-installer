@@ -26,7 +26,7 @@ import webkit
 import string
 import parted
 
-gettext.install("live-installer", "/usr/share/linuxmint/locale")
+gettext.install("live-installer", "/usr/share/gooroom/locale")
 gtk.gdk.threads_init()
 
 LOADING_ANIMATION = '/usr/share/live-installer/loading.gif'
@@ -605,7 +605,7 @@ class InstallerWindow:
             if iter is not None:
                 self.setup.language = model.get_value(iter, 3)
                 self.setup.print_setup()
-                gettext.translation('live-installer', "/usr/share/linuxmint/locale",
+                gettext.translation('live-installer', "/usr/share/gooroom/locale",
                                 languages=[self.setup.language, self.setup.language.split('_')[0]],
                                 fallback=True).install()  # Try e.g. zh_CN, zh, or fallback to hardcoded English
                 try:
