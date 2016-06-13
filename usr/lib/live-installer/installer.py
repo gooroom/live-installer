@@ -556,7 +556,7 @@ class InstallerEngine:
                 if("06_gooroom_theme" in line):
                     found_theme = True
                     print " --> Found Grub theme: %s " % line
-                if ("menuentry" in line and "class Gooroom" in line):
+                if ("menuentry" in line and "class gooroom" in line):
                     found_entry = True
                     print " --> Found Grub entry: %s " % line
             grubfh.close()
