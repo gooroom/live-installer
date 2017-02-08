@@ -1,3 +1,24 @@
+live-installer (0.2+grm1) gooroom; urgency=medium
+
+  [ jongkyung.woo ]
+  * [c0620af1] Change the text and icon of the source to the Gooroom Platform
+  * [1d3b843b] Change the linuxmit to gooroom in sources
+  * [6c284d62] grub-install를 실행하는 부분에 최종 결과 확인은 --class gooroom를 체크
+  * [96aa227c] debian-installer-launcher.desktop 한글 번역
+  * [a527f3ef] enable selinux-activate
+  * [f3b19a10] update qooroom platfrom icons
+  * [d01ae03c] convert live-installer.png to live-installer.xpm
+  * [5c8efe46] add gooroom-platform.png at welcome.html
+  * [44c7de5a] update logo.png image
+  * [45eb2a3a] resize gooroom-platform.png image to 128 pixel
+
+  [ Ali Rıza KESKİN ]
+  * [f641d0df] Update installer.py
+
+  [ Gooroom Autobuilder ]
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Wed, 08 Feb 2017 12:50:21 +0900
+
 live-installer (0.1) gooroom; urgency=medium
 
   * Initial Release on Gooroom
