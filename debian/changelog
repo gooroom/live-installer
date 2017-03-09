@@ -1,3 +1,12 @@
+live-installer (0.2.1+grm1) gooroom; urgency=medium
+
+  [ jongkyung.woo ]
+  * [d467bb1d] disable selinux-activate
+
+  [ Gooroom Autobuilder ]
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 09 Mar 2017 11:47:58 +0900
+
 live-installer (0.2+grm1) gooroom; urgency=medium
 
   [ jongkyung.woo ]
