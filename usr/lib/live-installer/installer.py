@@ -508,9 +508,9 @@ class InstallerEngine:
         self.do_run_in_chroot("sed -i 's/^deb cdrom/#deb cdrom/' /etc/apt/sources.list")
         self.do_run_in_chroot("apt-get -y --force-yes autoremove")
 
-        # Enable selinux
-        print " ---> Enable SELinux"
-        self.do_run_in_chroot("/usr/sbin/selinux-activate")
+        ## Enable selinux
+        #print " ---> Enable SELinux"
+        #self.do_run_in_chroot("/usr/sbin/selinux-activate")
 
         # now unmount it
         print " --> Unmounting partitions"
