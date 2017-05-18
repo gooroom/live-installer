@@ -506,7 +506,7 @@ class InstallerWindow:
 
         #Load languages into memory
         languages = {}
-        for line in commands.getoutput("isoquery --iso 639").split('\n'):
+        for line in commands.getoutput("isoquery --iso 639-2").split('\n'):
             _, code3, code2, language = line.split('\t')
             languages[code2 or code3] = language
 
