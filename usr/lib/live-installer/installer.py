@@ -140,6 +140,7 @@ class InstallerEngine:
         os.system("umount --force /target/dev/shm")
         os.system("umount --force /target/dev/pts")
         os.system("umount --force /target/dev/")
+        os.system("umount --force /target/sys/fs/fuse/connections")
         os.system("umount --force /target/sys/")
         os.system("umount --force /target/proc/")
 
@@ -253,20 +254,27 @@ class InstallerEngine:
 
         if (setup.gptonefi):
             print " --> Creating /target/boot/efi/EFI/gooroom/grubx64.efi"
-            #os.system("mkdir -p /target/boot/efi/EFI/gooroom")
-            #os.system("cp /lib/live/mount/medium/EFI/BOOT/grubx64.efi /target/boot/efi/EFI/gooroom")
             os.system("mkdir -p /target/debs")
             os.system("cp /lib/live/mount/medium/pool/main/g/grub2/grub-efi* /target/debs/")
             os.system("cp /lib/live/mount/medium/pool/main/e/efibootmgr/efibootmgr* /target/debs/")
             os.system("cp /lib/live/mount/medium/pool/main/e/efivar/* /target/debs/")
-            os.system("cp /lib/live/mount/medium/pool/main/e/efivar/* /target/debs/")
-            self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive dpkg -P grub-pc grub2")
+            os.system("cp /lib/live/mount/medium/pool/main/s/shim/* /target/debs/")
+            self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive dpkg -P grub-pc grub-pc-bin grub2")
             self.do_run_in_chroot("dpkg -i /debs/*")
-            #
-            # TODO Check signed grubx64.efi file
-            #
+
             if(not os.path.exists("/target/boot/efi/EFI/gooroom/grubx64.efi")):
+                #
+                # TODO : Check signed grubx64.efi file
+                #        - dell OptiPlex 7040
+                #        - target=x86_64-efi
+                #
+                #/partition.partition.path
+                #for partition in setup.partitions:
+                #    if (partition.format_as == "vfat"):
+                #        print "--> partition.partition.path => \"%s\"" % partition.partition.path
+                #        self.do_run_in_chroot("efibootmgr --create --disk /dev/sda --part 1 -w --label gooroom --loader '\EFI\gooroom\grubx64.efi'")
                 self.do_run_in_chroot("grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=gooroom")
+
             os.system("rm -rf /target/debs")
 
         # Detect cdrom device
@@ -528,6 +536,7 @@ class InstallerEngine:
             os.system("umount --force /target/boot/efi")
             os.system("umount --force /target/media/cdrom")
         os.system("umount --force /target/dev/")
+        os.system("umount --force /target/sys/fs/fuse/connections")
         os.system("umount --force /target/sys/")
         os.system("umount --force /target/proc/")
         os.system("rm -f /target/etc/resolv.conf")
