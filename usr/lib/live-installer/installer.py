@@ -297,7 +297,13 @@ class InstallerEngine:
         print " --> Adding new user"
         our_current += 1
         self.update_progress(total=our_total, current=our_current, message=_("Adding new user to the system"))
-        self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" {username}'.format(real_name=setup.real_name.replace('"', r'\"'), username=setup.username))
+
+        # ecryptfs-utils
+        if os.path.exists('/target/sbin/mount.ecryptfs'):
+            self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" --encrypt-home {username}'.format(real_name=setup.real_name.replace('"', r'\"'), username=setup.username))
+        else:
+            self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" {username}'.format(real_name=setup.real_name.replace('"', r'\"'), username=setup.username))
+
         for group in 'adm audio bluetooth cdrom dialout dip fax floppy fuse lpadmin netdev plugdev powerdev sambashare scanner sudo tape users vboxusers video'.split():
             self.do_run_in_chroot("adduser {user} {group}".format(user=setup.username, group=group))
 
