@@ -358,6 +358,11 @@ class InstallerEngine:
                         if blkid_elements[0] == partition.partition.path:
                             blkid_mini_elements = blkid_line.split()
                             for blkid_mini_element in blkid_mini_elements:
+                                # root=/dev/sda1
+                                rc = subprocess.call (["grep", "-qrs", "^GRUB_DISABLE_LINUX_UUID=true", "/etc/default/grub"], shell=False)
+                                if rc == 0:
+                                    break
+                                # root=UUID=uuid
                                 if "UUID=" in blkid_mini_element:
                                     partition_uuid = blkid_mini_element.replace('"', '').strip()
                                     break
