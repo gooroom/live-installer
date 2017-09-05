@@ -256,6 +256,7 @@ class InstallerEngine:
             print " --> Creating /target/boot/efi/EFI/gooroom/grubx64.efi"
             os.system("mkdir -p /target/debs")
             os.system("cp /lib/live/mount/medium/pool/main/g/grub2/grub-efi* /target/debs/")
+            os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-grub/gooroom-grub-efi* /target/debs/")
             os.system("cp /lib/live/mount/medium/pool/main/e/efibootmgr/efibootmgr* /target/debs/")
             os.system("cp /lib/live/mount/medium/pool/main/e/efivar/* /target/debs/")
             os.system("cp /lib/live/mount/medium/pool/main/s/shim/* /target/debs/")
