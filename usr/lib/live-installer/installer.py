@@ -87,6 +87,17 @@ class InstallerEngine:
                 self.exec_cmd(cmd)
                 partition.type = partition.format_as
 
+                #
+                # Assign LABEL
+                #
+                if(partition.mount_as == "/"):
+                    print "==== DEBUG ==== Assign GOOROOM_ROOT_VOL label to the %s partition" % (partition.partition.path)
+                    os.system("tune2fs -L GOOROOM_ROOT_VOL " + partition.partition.path)
+
+                if(partition.mount_as == "/recovery"):
+                    print "==== DEBUG ==== Assign GOOROOM_RECOVERY label to the %s partition" % (partition.partition.path)
+                    os.system("tune2fs -L GOOROOM_RECOVERY " + partition.partition.path)
+
     def step_mount_source(self, setup):
         # Mount the installation media
         print " --> Mounting partitions"
@@ -256,7 +267,6 @@ class InstallerEngine:
             print " --> Creating /target/boot/efi/EFI/gooroom/grubx64.efi"
             os.system("mkdir -p /target/debs")
             os.system("cp /lib/live/mount/medium/pool/main/g/grub2/grub-efi* /target/debs/")
-            os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-grub/gooroom-grub-efi* /target/debs/")
             os.system("cp /lib/live/mount/medium/pool/main/e/efibootmgr/efibootmgr* /target/debs/")
             os.system("cp /lib/live/mount/medium/pool/main/e/efivar/* /target/debs/")
             os.system("cp /lib/live/mount/medium/pool/main/s/shim/* /target/debs/")
@@ -359,10 +369,10 @@ class InstallerEngine:
                         if blkid_elements[0] == partition.partition.path:
                             blkid_mini_elements = blkid_line.split()
                             for blkid_mini_element in blkid_mini_elements:
-                                # root=/dev/sda1
-                                rc = subprocess.call (["grep", "-qrs", "^GRUB_DISABLE_LINUX_UUID=true", "/etc/default/grub"], shell=False)
-                                if rc == 0:
-                                    break
+                                ## root=/dev/sda1
+                                #rc = subprocess.call (["grep", "-qrs", "^GRUB_DISABLE_LINUX_UUID=true", "/etc/default/grub"], shell=False)
+                                #if rc == 0:
+                                #    break
                                 # root=UUID=uuid
                                 if "UUID=" in blkid_mini_element:
                                     partition_uuid = blkid_mini_element.replace('"', '').strip()
