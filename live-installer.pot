@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-07 16:05+0900\n"
+"POT-Creation-Date: 2017-09-19 19:12+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,19 +22,19 @@ msgstr ""
 msgid "Formatting %(partition)s as %(format)s ..."
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:93
-#: usr/lib/live-installer/installer.py:104
+#: usr/lib/live-installer/installer.py:108
+#: usr/lib/live-installer/installer.py:119
 #, python-format
 msgid "Mounting %(partition)s on %(mountpoint)s"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:129
+#: usr/lib/live-installer/installer.py:144
 msgid ""
 "ERROR: You must first manually mount your target filesystem(s) at /target to "
 "do a custom install!"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:137
+#: usr/lib/live-installer/installer.py:152
 msgid ""
 "ERROR: Something is wrong with the installation medium! This is usually "
 "caused by burning tools which are not compatible with LMDE (YUMI or other "
@@ -42,80 +42,84 @@ msgid ""
 "tool."
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:161
+#: usr/lib/live-installer/installer.py:177
 msgid "Indexing files to be copied.."
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:181
+#: usr/lib/live-installer/installer.py:197
 #, python-format
 msgid "Copying %s"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:223
+#: usr/lib/live-installer/installer.py:239
 #, python-format
 msgid "Restoring meta-information on %s"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:233
+#: usr/lib/live-installer/installer.py:249
 msgid "Entering the system ..."
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:275
+#: usr/lib/live-installer/installer.py:306
 msgid "Removing live configuration (packages)"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:283
+#: usr/lib/live-installer/installer.py:314
 msgid "Adding new user to the system"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:323
+#: usr/lib/live-installer/installer.py:360
 msgid "Writing filesystem mount information to /etc/fstab"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:376
+#: usr/lib/live-installer/installer.py:445
 msgid "Setting hostname"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:395
+#: usr/lib/live-installer/installer.py:464
 msgid "Setting locale"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:409
+#: usr/lib/live-installer/installer.py:478
 msgid "Localizing packages"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:424
+#: usr/lib/live-installer/installer.py:493
 msgid "Installing drivers"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:439
+#: usr/lib/live-installer/installer.py:508
 msgid "Setting keyboard options"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:482
+#: usr/lib/live-installer/installer.py:551
 msgid "Installing bootloader"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:491
+#: usr/lib/live-installer/installer.py:562
 msgid ""
 "WARNING: The grub bootloader was not configured properly! You need to "
 "configure it manually."
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:504
+#: usr/lib/live-installer/installer.py:570
+msgid "Configuring Recovery Mode"
+msgstr ""
+
+#: usr/lib/live-installer/installer.py:588
 msgid "Cleaning APT"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:528
+#: usr/lib/live-installer/installer.py:620
 #: usr/lib/live-installer/frontend/gtk_interface.py:973
 msgid "Installation finished"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:538
+#: usr/lib/live-installer/installer.py:630
 msgid "Configuring bootloader"
 msgstr ""
 
-#: usr/lib/live-installer/installer.py:547
+#: usr/lib/live-installer/installer.py:640
 msgid "Checking bootloader"
 msgstr ""
 

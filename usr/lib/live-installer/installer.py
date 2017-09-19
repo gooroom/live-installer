@@ -82,7 +82,7 @@ class InstallerEngine:
                         cmd = "mkfs.%s %s -F 32" % (partition.format_as, partition.partition.path)
                     else:
                         cmd = "mkfs.%s %s" % (partition.format_as, partition.partition.path) # works with bfs, btrfs, minix, msdos, ntfs, vfat
-                    
+
                 print "EXECUTING: '%s'" % cmd
                 self.exec_cmd(cmd)
                 partition.type = partition.format_as
@@ -91,12 +91,16 @@ class InstallerEngine:
                 # Assign LABEL
                 #
                 if(partition.mount_as == "/"):
-                    print "==== DEBUG ==== Assign GOOROOM_ROOT_VOL label to the %s partition" % (partition.partition.path)
-                    os.system("tune2fs -L GOOROOM_ROOT_VOL " + partition.partition.path)
+                    print "==== DEBUG ==== Assign GRM_ROOT_VOL label to the %s partition" % (partition.partition.path)
+                    os.system("tune2fs -L GRM_ROOT_VOL " + partition.partition.path)
 
                 if(partition.mount_as == "/recovery"):
-                    print "==== DEBUG ==== Assign GOOROOM_RECOVERY label to the %s partition" % (partition.partition.path)
-                    os.system("tune2fs -L GOOROOM_RECOVERY " + partition.partition.path)
+                    print "==== DEBUG ==== Assign GRM_RECOVERY label to the %s partition" % (partition.partition.path)
+                    os.system("tune2fs -L GRM_RECOVERY " + partition.partition.path)
+
+                if(partition.mount_as == "/boot/efi"):
+                    print "==== DEBUG ==== Assign GRM_BOOTEFI label to the %s partition" % (partition.partition.path)
+                    os.system("fatlabel %s GRM_BOOTEFI" % partition.partition.path)
 
     def step_mount_source(self, setup):
         # Mount the installation media
@@ -104,13 +108,13 @@ class InstallerEngine:
         self.update_progress(total=4, current=2, message=_("Mounting %(partition)s on %(mountpoint)s") % {'partition':self.media, 'mountpoint':"/source/"})
         print " ------ Mounting %s on %s" % (self.media, "/source/")
         self.do_mount(self.media, "/source/", self.media_type, options="loop")
-                                        
-    def step_mount_partitions(self, setup):  
+
+    def step_mount_partitions(self, setup):
         self.step_mount_source(setup)
-      
+
         # Mount the target partition
-        for partition in setup.partitions:                    
-            if(partition.mount_as is not None and partition.mount_as != ""):   
+        for partition in setup.partitions:
+            if(partition.mount_as is not None and partition.mount_as != ""):
                   if partition.mount_as == "/":
                         self.update_progress(total=4, current=3, message=_("Mounting %(partition)s on %(mountpoint)s") % {'partition':partition.partition.path, 'mountpoint':"/target/"})
                         print " ------ Mounting partition %s on %s" % (partition.partition.path, "/target/")
@@ -120,8 +124,8 @@ class InstallerEngine:
                             fs = partition.type
                         self.do_mount(partition.partition.path, "/target", fs, None)
                         break
-        
-        # Mount the other partitions        
+
+        # Mount the other partitions
         for partition in setup.partitions:
             if(partition.mount_as is not None and partition.mount_as != "" and partition.mount_as != "/" and partition.mount_as != "swap"):
                 print " ------ Mounting %s on %s" % (partition.partition.path, "/target" + partition.mount_as)
@@ -154,6 +158,8 @@ class InstallerEngine:
         os.system("umount --force /target/sys/fs/fuse/connections")
         os.system("umount --force /target/sys/")
         os.system("umount --force /target/proc/")
+        os.system("umount --force /target/boot/efi")
+        os.system("umount --force /target/recovery")
 
         if (not setup.skip_mount):
             self.step_format_partitions(setup)
@@ -402,11 +408,40 @@ class InstallerEngine:
                         fstab.write("%s\t%s\t%s\t%s\t%s\t%s\n" % (partition_uuid, partition.mount_as, fs, fstab_mount_options, "0", fstab_fsck_option))
         fstab.close()
 
+    def do_archive_partition(self, our_total, our_current, setup):
+        for partition in setup.partitions:
+            if(partition.mount_as == "/"):
+                print "==== DEBUG ==== Assign archive_root_partition to the %s partition" % (partition.partition.path)
+                archive_root_partition = partition.partition.path
+
+            if(partition.mount_as == "/boot/efi"):
+                print "==== DEBUG ==== Assign archive_boot_partition to the %s partition" % (partition.partition.path)
+                archive_bootefi_partition = partition.partition.path
+
+            if(partition.mount_as == "/recovery"):
+                print "==== DEBUG ==== Assign archive_recovery_partition to the %s partition" % (partition.partition.path)
+                archive_recovery_partition = partition.partition.path
+
+        if archive_recovery_partition is not None:
+            print " --> Supporting Gooroom RECOVERY Mode"
+            self.update_progress(pulse=True, total=our_total, current=our_current, message=_("Configuring Recovery Mode"))
+
+            self.do_mount(archive_recovery_partition, "/target", "ext4", None)
+            #os.system("mount %s /target/recovery" % archive_recovery_partition)
+
+            print "fsarchiver savefs /target/gooroom_root_partition.fsa %s" % (archive_root_partition)
+            os.system("fsarchiver savefs /target/gooroom_root_partition.fsa %s" % archive_root_partition)
+
+            if archive_bootefi_partition is not None:
+                print "fsarchiver savefs /target/gooroom_bootefi_partition.fsa %s" % (archive_bootefi_partition)
+                os.system("fsarchiver savefs /target/gooroom_bootefi_partition.fsa %s" % archive_bootefi_partition)
+
+            os.system("umount --force %s" % archive_recovery_partition)
 
     def finish_install(self, setup):
         # Steps:
-        our_total = 11
-        our_current = 4
+        our_total = 12
+        our_current = 5
 
         # write host+hostname infos
         print " --> Writing hostname"
@@ -531,6 +566,17 @@ class InstallerEngine:
                     self.error_message(message=_("WARNING: The grub bootloader was not configured properly! You need to configure it manually."))
                     break
 
+        # Recovery Mode
+        for partition in setup.partitions:
+            if(partition.mount_as == "/recovery"):
+                print " --> Configuring Recovery Mode"
+                # install fsarchiver.deb
+                os.system("mkdir -p /target/debs")
+                os.system("cp /lib/live/mount/medium/pool/main/f/fsarchiver/*.deb /target/debs/")
+                os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-recovery-utils/*.deb /target/debs/")
+                self.do_run_in_chroot("dpkg -i /debs/*.deb")
+                os.system("rm -rf /target/debs")
+
         # recreate initramfs (needed in case of skip_mount also, to include things like mdadm/dm-crypt/etc in case its needed to boot a custom install)
         print " --> Configuring Initramfs"
         our_current += 1
@@ -570,6 +616,9 @@ class InstallerEngine:
             self.do_unmount("/target")
         self.do_unmount("/source")
 
+        ## Recovery Mode
+        self.do_archive_partition(our_total, our_current, setup)
+
         self.update_progress(done=True, message=_("Installation finished"))
         print " --> All done"
 
@@ -578,7 +627,7 @@ class InstallerEngine:
         command = command.replace('"', "'").strip()
         print "chroot /target/ /bin/sh -c \"%s\"" % command
         os.system("chroot /target/ /bin/sh -c \"%s\"" % command)
-        
+
     def do_configure_grub(self, our_total, our_current, setup):
         self.update_progress(pulse=True, total=our_total, current=our_current, message=_("Configuring bootloader"))
         if not setup.gptonefi:
@@ -588,7 +637,7 @@ class InstallerEngine:
             grubfh = open("/var/log/live-installer-grub-output.log", "w")
             grubfh.writelines(grub_output)
             grubfh.close()
-        
+
     def do_check_grub(self, our_total, our_current):
         self.update_progress(pulse=True, total=our_total, current=our_current, message=_("Checking bootloader"))
         print " --> Checking Grub configuration"
