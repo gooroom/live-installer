@@ -200,6 +200,12 @@ class InstallerWindow:
         # Install Grub by default
         grub_check.set_active(True)
         grub_box.set_sensitive(True)
+
+        # encrypt_home
+        ecryptfs_check = self.wTree.get_widget("radiobutton_ecryptfs")
+        ecryptfs_check.connect("toggled", self.assign_ecryptfs_install)
+        encfs_check = self.wTree.get_widget("radiobutton_encfs")
+        encfs_check.connect("toggled", self.assign_encfs_install)
         
         # kb models
         cell = gtk.CellRendererText()
@@ -413,6 +419,12 @@ class InstallerWindow:
         self.wTree.get_widget("checkbutton_grub").set_label(_("Install GRUB"))
         self.wTree.get_widget("label_grub_help").set_label(_("GRUB is a bootloader used to load the Linux kernel."))
         
+        # encrypt home
+        self.wTree.get_widget("label_encrypt_home").set_markup("<b>%s</b>" % _("Encrypt home"))
+        self.wTree.get_widget("radiobutton_ecryptfs").set_label(_("Ecryptfs (Kernel Level Encryption for Gooroom Platform recommendations)"))
+        self.wTree.get_widget("radiobutton_encfs").set_label(_("Encfs (User Level Encryption for advanced users)"))
+        self.wTree.get_widget("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors, Installation is not recommended except for research purpose to verify the encryption function\n"))
+
         # keyboard page
         self.wTree.get_widget("label_test_kb").set_label(_("Use this box to test your keyboard layout."))
         self.wTree.get_widget("label_kb_model").set_label(_("Model"))        
@@ -634,6 +646,16 @@ class InstallerWindow:
             self.setup.grub_device = row[0]  
         self.setup.print_setup()
        
+    def assign_ecryptfs_install(self, radiobutton, data=None):
+        if radiobutton.get_active():
+            self.setup.ecryptfs = True
+            self.setup.encfs = False
+
+    def assign_encfs_install(self, radiobutton, data=None):
+        if radiobutton.get_active():
+            self.setup.encfs = True
+            self.setup.ecryptfs = False
+
     def assign_keyboard_model(self, combobox):
         ''' Called whenever someone updates the keyboard model '''
         model = combobox.get_model()
@@ -894,6 +916,8 @@ class InstallerWindow:
         model.append(top, (_("Automatic login: ") + bold(_("enabled") if self.setup.autologin else _("disabled")),))
         top = model.append(None, (_("System settings"),))
         model.append(top, (_("Hostname: ") + bold(self.setup.hostname),))
+        top = model.append(None, (_("Encrypted home settings"),))
+        model.append(top, (_("Encrypted home: ") + bold(_("ecryptfs (Kernel Level Encryption)") if self.setup.ecryptfs else _("encfs (User Level Encryption)")),))
         top = model.append(None, (_("Filesystem operations"),))
         model.append(top, (bold(_("Install bootloader on %s") % self.setup.grub_device) if self.setup.grub_device else _("Do not install bootloader"),))
         if self.setup.skip_mount:

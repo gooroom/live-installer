@@ -315,15 +315,59 @@ class InstallerEngine:
         our_current += 1
         self.update_progress(total=our_total, current=our_current, message=_("Adding new user to the system"))
 
-        # ecryptfs-utils
-        if os.path.exists('/target/sbin/mount.ecryptfs'):
-            self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" --encrypt-home {username}'.format(real_name=setup.real_name.replace('"', r'\"'), username=setup.username))
-        else:
-            self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" {username}'.format(real_name=setup.real_name.replace('"', r'\"'), username=setup.username))
+        # encrypt home
+        if setup.ecryptfs:
+            print " --> Setup ecryptfs"
+            # ecryptfs-utils
+            if os.path.exists('/target/sbin/mount.ecryptfs'):
+                self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" --encrypt-home {username}'.format(real_name=setup.real_name.replace('"', r'\"'), username=setup.username))
+            else:
+                self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" {username}'.format(real_name=setup.real_name.replace('"', r'\"'), username=setup.username))
 
-        for group in 'adm audio bluetooth cdrom dialout dip fax floppy fuse lpadmin netdev plugdev powerdev sambashare scanner sudo tape users vboxusers video'.split():
-            self.do_run_in_chroot("adduser {user} {group}".format(user=setup.username, group=group))
+        if setup.encfs:
+            print " --> Setup encfs"
+            # install encfs libtinyxml2-4 libpam-encfs libck-connector0 libpam-ck-connector
+            os.system("mkdir -p /target/debs")
+            os.system("cp /lib/live/mount/medium/pool/main/e/encfs/*.deb /target/debs/")
+            os.system("cp /lib/live/mount/medium/pool/main/libp/libpam-encfs/*.deb /target/debs/")
+            os.system("cp /lib/live/mount/medium/pool/main/t/tinyxml2/*.deb /target/debs/")
+            os.system("cp /lib/live/mount/medium/pool/main/c/consolekit/*.deb /target/debs/")
+            os.system("cp /lib/live/mount/medium/pool/main/e/expect/*.deb /target/debs/")
+            os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-encfs-utils/*.deb /target/debs/")
+            self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive dpkg -i /debs/*.deb")
+            os.system("rm -rf /target/debs")
 
+            if os.path.exists('/target/usr/bin/encfs'):
+                # grouadd fuse
+                self.do_run_in_chroot("groupadd fuse")
+
+                # adduser --disabled-login
+                self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" --encfs-encrypt-home {user}'.format(real_name=setup.real_name.replace('"', r'\"'), user=setup.username))
+
+                # mount /home/.encfs/{user}
+                self.do_run_in_chroot('echo -e \"p\\n{password}\" | encfs -v --stdinpass /home/.encfs/{user} /home/{user}'.format(password=setup.password1, user=setup.username))
+                time.sleep(5)
+                print " --> cp -ap /target/home/%s.bak/.[a-z]* /target/home/%s/" % (setup.username, setup.username)
+                os.system("cp -ap /target/home/%s.bak/.[a-z]* /target/home/%s/" % (setup.username, setup.username))
+                self.do_run_in_chroot('chown {user}:{user} /home/.encfs/{user}/.encfs6.xml'.format(user=setup.username))
+
+                # permission
+                self.do_run_in_chroot("chgrp fuse /etc/fuse.conf")
+                self.do_run_in_chroot("chgrp fuse /bin/fusermount")
+                self.do_run_in_chroot("chmod 4750 /bin/fusermount")
+
+                # umount
+                print " --> fusermount -u /target/home/%s" % setup.username
+                os.system("fusermount -u /target/home/%s" % setup.username)
+                print " --> rm -rf /target/home/%s.bak" % setup.username
+                os.system("rm -rf /target/home/%s.bak" % setup.username)
+
+            else:
+                self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" {user}'.format(real_name=setup.real_name.replace('"', r'\"'), user=setup.username))
+
+        for group in 'adm audio bluetooth cdrom dialout dip fax floppy fuse lpadmin netdev plugdev powerdev sambashare scanner sudo tape users vboxusers video'.split(): self.do_run_in_chroot("adduser {user} {group}".format(user=setup.username, group=group))
+
+        # user and root password
         fp = open("/target/tmp/.passwd", "w")
         fp.write(setup.username +  ":" + setup.password1 + "\n")
         fp.write("root:" + setup.password1 + "\n")
@@ -421,6 +465,8 @@ class InstallerEngine:
             if(partition.mount_as == "/recovery"):
                 print "==== DEBUG ==== Assign archive_recovery_partition to the %s partition" % (partition.partition.path)
                 archive_recovery_partition = partition.partition.path
+            else:
+                archive_recovery_partition = None
 
         if archive_recovery_partition is not None:
             print " --> Supporting Gooroom RECOVERY Mode"
@@ -715,6 +761,8 @@ class Setup(object):
     password2 = None
     real_name = None    
     grub_device = None
+    ecryptfs = True
+    encfs = False
     disks = []
     target_disk = None
     gptonefi = False
@@ -743,6 +791,8 @@ class Setup(object):
             print "hostname: %s " % self.hostname
             print "passwords: %s - %s" % (self.password1, self.password2)        
             print "grub_device: %s " % self.grub_device
+            print "ecryptfs: %s " % self.ecryptfs
+            print "encfs: %s " % self.encfs
             print "skip_mount: %s" % self.skip_mount
             if (not self.skip_mount):
                 print "target_disk: %s " % self.target_disk
