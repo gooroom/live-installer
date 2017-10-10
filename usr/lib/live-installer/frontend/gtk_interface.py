@@ -713,8 +713,13 @@ class InstallerWindow:
             self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_NO, gtk.ICON_SIZE_BUTTON)            
             self.wTree.get_widget("label_mismatch").set_label(_("Passwords do not match."))
         else:
-            self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_OK, gtk.ICON_SIZE_BUTTON)            
-            self.wTree.get_widget("label_mismatch").set_label(_("Passwords match."))
+            import re
+            if re.match(r'[A-Za-z0-9@#$%^&+=]{8,}', self.setup.password1):
+                self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_OK, gtk.ICON_SIZE_BUTTON)            
+                self.wTree.get_widget("label_mismatch").set_label(_("Passwords match."))
+            else:
+                self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_OK, gtk.ICON_SIZE_BUTTON)            
+                self.wTree.get_widget("label_mismatch").set_label(_("New password is too simple."))
         self.setup.print_setup()
         
     def activate_page(self, index):
