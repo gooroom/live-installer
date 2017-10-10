@@ -542,7 +542,7 @@ class InstallerWindow:
                 continue
             pixbuf = flag(ccode) if not lang in 'eo ia' else flag('_' + lang)
             iter = model.append((language, country, pixbuf, locale))
-            if (ccode == cur_country_code and
+            if (ccode == self.cur_country_code and
                 (not set_iter or
                  set_iter and lang == 'en' or  # prefer English, or
                  set_iter and lang == ccode.lower())):  # fuzzy: lang matching ccode (fr_FR, de_DE, es_ES, ...)
