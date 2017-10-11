@@ -952,7 +952,7 @@ class InstallerWindow:
         self.critical_error_happened = False
 
         # Now it's time to load the slide show
-        slideThr = Slideshow(self.slideshow_browser, self.slideshow_path, language=self.cur_country_code)
+        slideThr = Slideshow(self.slideshow_browser, self.slideshow_path, language=self.setup.language)
         slideThr.daemon = True  # let the slide-thread die with the parent
         slideThr.start()
 
