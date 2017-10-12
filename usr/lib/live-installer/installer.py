@@ -405,8 +405,11 @@ class InstallerEngine:
         our_current += 1
         self.update_progress(total=our_total, current=our_current, message=_("Writing filesystem mount information to /etc/fstab"))
         # make sure fstab has default /proc and /sys entries
-        if(not os.path.exists("/target/etc/fstab")):
-            os.system("echo \"#### Static Filesystem Table File\" > /target/etc/fstab")
+        #
+        # A bug in adding partition table to the fstab if the partition was mounted automatically
+        #
+        #if(not os.path.exists("/target/etc/fstab")):
+        os.system("echo \"#### Static Filesystem Table File\" > /target/etc/fstab")
         fstab = open("/target/etc/fstab", "a")
         fstab.write("proc\t/proc\tproc\tdefaults\t0\t0\n")
         if(not setup.skip_mount):
@@ -453,6 +456,10 @@ class InstallerEngine:
         fstab.close()
 
     def do_archive_partition(self, our_total, our_current, setup):
+        archive_root_partition = None
+        archive_bootefi_partition = None
+        archive_recovery_partition = None
+
         for partition in setup.partitions:
             if(partition.mount_as == "/"):
                 print "==== DEBUG ==== Assign archive_root_partition to the %s partition" % (partition.partition.path)
