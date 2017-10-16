@@ -28,9 +28,9 @@ class InstallerEngine:
                     except AttributeError: continue
                     d[key] = value
             return d
-        for f, n, v in (('/etc/os-release', 'PRETTY_NAME', 'VERSION'),
-                        ('/etc/lsb-release', 'DISTRIB_DESCRIPTION', 'DISTRIB_RELEASE'),
-                        (CONFIG_FILE, 'DISTRIBUTION_NAME', 'DISTRIBUTION_VERSION')):
+        for f, n, v in ((CONFIG_FILE, 'DISTRIBUTION_NAME', 'DISTRIBUTION_VERSION'),
+                        ('/etc/os-release', 'PRETTY_NAME', 'VERSION'),
+                        ('/etc/lsb-release', 'DISTRIB_DESCRIPTION', 'DISTRIB_RELEASE')):
             try:
                 config = _get_config_dict(f)
                 name, version = config[n], config[v]

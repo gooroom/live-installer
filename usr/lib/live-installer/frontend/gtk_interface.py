@@ -113,6 +113,7 @@ class InstallerWindow:
         self.wTree.get_widget("treeview_language_list").connect("cursor-changed", self.assign_language)
 
         # build user info page
+        '''
         os.system("convert /usr/share/pixmaps/faces/7_penguin.png -resize x96 /tmp/live-installer-face.png")
 
         pic_box = self.wTree.get_widget("hbox8")
@@ -153,6 +154,7 @@ class InstallerWindow:
         self.face_button.set_picture_from_file("/tmp/live-installer-face.png")
 
         pic_box.pack_start(self.face_button, True, False, 6)
+        '''
 
         # build the language list
         self.build_lang_list()
@@ -165,8 +167,8 @@ class InstallerWindow:
         # partitions
         self.wTree.get_widget("button_edit").set_label(_("Edit partitions"))
         self.wTree.get_widget("button_refresh").set_label(_("Refresh"))
-        self.wTree.get_widget("button_custommount").set_label(_("Expert mode"))
-        self.wTree.get_widget("button_custommount").connect("clicked", self.show_customwarning)
+        #self.wTree.get_widget("button_custommount").set_label(_("Expert mode"))
+        #self.wTree.get_widget("button_custommount").connect("clicked", self.show_customwarning)
         self.wTree.get_widget("button_edit").connect("clicked", partitioning.manually_edit_partitions)
         self.wTree.get_widget("button_refresh").connect("clicked", lambda _: partitioning.build_partitions(self))
         self.wTree.get_widget("treeview_disks").get_selection().connect("changed", partitioning.update_html_preview)
@@ -399,6 +401,7 @@ class InstallerWindow:
         self.wTree.get_widget("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your password twice to ensure it is correct."))
         self.wTree.get_widget("label_hostname").set_markup("<b>%s</b>" % _("Hostname"))
         self.wTree.get_widget("label_hostname_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This hostname will be the computer's name on the network."))
+        '''
         self.wTree.get_widget("label_autologin").set_markup("<b>%s</b>" % _("Automatic login"))
         self.wTree.get_widget("label_autologin_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("If enabled, the login screen is skipped when the system starts, and you are signed into your desktop session automatically."))
         self.wTree.get_widget("checkbutton_autologin").set_label(_("Log in automatically"))
@@ -410,6 +413,7 @@ class InstallerWindow:
         self.face_button.set_tooltip_text(_("Click to change your picture"))
         self.face_photo_menuitem.set_label(_("Take a photo..."))
         self.face_browse_menuitem.set_label(_("Browse for more pictures..."))
+        '''
 
         # timezones
         self.wTree.get_widget("label_timezones").set_label(_("Selected timezone:"))
@@ -703,23 +707,25 @@ class InstallerWindow:
         ''' Someone typed into the entry '''
         self.setup.password1 = self.wTree.get_widget("entry_userpass1").get_text()
         self.setup.password2 = self.wTree.get_widget("entry_userpass2").get_text()        
+        self.wTree.get_widget("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your password twice to ensure it is correct."))
         if(self.setup.password1 == "" and self.setup.password2 == ""):
             self.wTree.get_widget("image_mismatch").hide()
             self.wTree.get_widget("label_mismatch").hide()
         else:
             self.wTree.get_widget("image_mismatch").show()
             self.wTree.get_widget("label_mismatch").show()
-        if(self.setup.password1 != self.setup.password2):
-            self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_NO, gtk.ICON_SIZE_BUTTON)            
-            self.wTree.get_widget("label_mismatch").set_label(_("Passwords do not match."))
-        else:
-            import re
-            if re.match(r'[A-Za-z0-9@#$%^&+=]{8,}', self.setup.password1):
-                self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_OK, gtk.ICON_SIZE_BUTTON)            
-                self.wTree.get_widget("label_mismatch").set_label(_("Passwords match."))
+            if(self.setup.password1 != self.setup.password2):
+                self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_NO, gtk.ICON_SIZE_BUTTON)            
+                self.wTree.get_widget("label_mismatch").set_label(_("Passwords do not match."))
             else:
-                self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_OK, gtk.ICON_SIZE_BUTTON)            
-                self.wTree.get_widget("label_mismatch").set_label(_("New password is too simple."))
+                import re
+                if re.match(r'[A-Za-z0-9@#$%^&+=]{8,}', self.setup.password1):
+                    self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_OK, gtk.ICON_SIZE_BUTTON)            
+                    self.wTree.get_widget("label_mismatch").set_label(_("Passwords match."))
+                else:
+                    self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_OK, gtk.ICON_SIZE_BUTTON)            
+                    self.wTree.get_widget("label_mismatch").set_label(_("New password is too simple."))
+                    self.wTree.get_widget("label_pass_help").set_label(_("It's recommended more than 8 letters as a combination of alphabets, numbers and special characters(@#$%^&amp;+=)."))
         self.setup.print_setup()
         
     def activate_page(self, index):
@@ -918,7 +924,7 @@ class InstallerWindow:
         top = model.append(None, (_("User settings"),))
         model.append(top, (_("Real name: ") + bold(self.setup.real_name),))
         model.append(top, (_("Username: ") + bold(self.setup.username),))
-        model.append(top, (_("Automatic login: ") + bold(_("enabled") if self.setup.autologin else _("disabled")),))
+        #model.append(top, (_("Automatic login: ") + bold(_("enabled") if self.setup.autologin else _("disabled")),))
         top = model.append(None, (_("System settings"),))
         model.append(top, (_("Hostname: ") + bold(self.setup.hostname),))
         top = model.append(None, (_("Encrypted home settings"),))
