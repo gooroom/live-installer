@@ -725,7 +725,7 @@ class InstallerWindow:
                 else:
                     self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_OK, gtk.ICON_SIZE_BUTTON)            
                     self.wTree.get_widget("label_mismatch").set_label(_("New password is too simple."))
-                    self.wTree.get_widget("label_pass_help").set_label(_("It's recommended more than 8 letters as a combination of alphabets, numbers and special characters(@#$%^&amp;+=)."))
+                    self.wTree.get_widget("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It's recommended more than 8 letters as a combination of alphabets, numbers and special characters(@#$%^&amp;+=)."))
         self.setup.print_setup()
         
     def activate_page(self, index):
