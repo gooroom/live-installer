@@ -83,6 +83,7 @@ class InstallerEngine:
                     else:
                         cmd = "mkfs.%s %s" % (partition.format_as, partition.partition.path) # works with bfs, btrfs, minix, msdos, ntfs, vfat
 
+                self.do_unmount(partition.partition.path)
                 print "EXECUTING: '%s'" % cmd
                 self.exec_cmd(cmd)
                 partition.type = partition.format_as
