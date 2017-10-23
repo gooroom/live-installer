@@ -473,24 +473,21 @@ class InstallerEngine:
             if(partition.mount_as == "/recovery"):
                 print "==== DEBUG ==== Assign archive_recovery_partition to the %s partition" % (partition.partition.path)
                 archive_recovery_partition = partition.partition.path
-            else:
-                archive_recovery_partition = None
 
-        if archive_recovery_partition is not None:
-            print " --> Supporting Gooroom RECOVERY Mode"
-            self.update_progress(pulse=True, total=our_total, current=our_current, message=_("Configuring Recovery Mode"))
+                print " --> Supporting Gooroom RECOVERY Mode"
+                self.update_progress(pulse=True, total=our_total, current=our_current, message=_("Configuring Recovery Mode"))
 
-            self.do_mount(archive_recovery_partition, "/target", "ext4", None)
+                self.do_mount(archive_recovery_partition, "/target", "ext4", None)
             #os.system("mount %s /target/recovery" % archive_recovery_partition)
 
-            print "fsarchiver savefs /target/gooroom_root_partition.fsa %s" % (archive_root_partition)
-            os.system("fsarchiver savefs /target/gooroom_root_partition.fsa %s" % archive_root_partition)
+                print "fsarchiver savefs /target/gooroom_root_partition.fsa %s" % (archive_root_partition)
+                os.system("fsarchiver savefs /target/gooroom_root_partition.fsa %s" % archive_root_partition)
 
-            if archive_bootefi_partition is not None:
-                print "fsarchiver savefs /target/gooroom_bootefi_partition.fsa %s" % (archive_bootefi_partition)
-                os.system("fsarchiver savefs /target/gooroom_bootefi_partition.fsa %s" % archive_bootefi_partition)
+                if archive_bootefi_partition is not None:
+                    print "fsarchiver savefs /target/gooroom_bootefi_partition.fsa %s" % (archive_bootefi_partition)
+                    os.system("fsarchiver savefs /target/gooroom_bootefi_partition.fsa %s" % archive_bootefi_partition)
 
-            os.system("umount --force %s" % archive_recovery_partition)
+                os.system("umount --force %s" % archive_recovery_partition)
 
     def finish_install(self, setup):
         # Steps:
@@ -675,7 +672,6 @@ class InstallerEngine:
 
         self.update_progress(done=True, message=_("Installation finished"))
         print " --> All done"
-
 
     def do_run_in_chroot(self, command):
         command = command.replace('"', "'").strip()
