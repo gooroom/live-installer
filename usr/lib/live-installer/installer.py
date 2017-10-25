@@ -88,20 +88,20 @@ class InstallerEngine:
                 self.exec_cmd(cmd)
                 partition.type = partition.format_as
 
-                #
-                # Assign LABEL
-                #
-                if(partition.mount_as == "/"):
-                    print "==== DEBUG ==== Assign GRM_ROOT_VOL label to the %s partition" % (partition.partition.path)
-                    os.system("tune2fs -L GRM_ROOT_VOL " + partition.partition.path)
+            #
+            # Assign LABEL
+            #
+            if(partition.mount_as == "/"):
+                print "==== DEBUG ==== Assign GRM_ROOT_VOL label to the %s partition" % (partition.partition.path)
+                os.system("tune2fs -L GRM_ROOT_VOL " + partition.partition.path)
 
-                if(partition.mount_as == "/recovery"):
-                    print "==== DEBUG ==== Assign GRM_RECOVERY label to the %s partition" % (partition.partition.path)
-                    os.system("tune2fs -L GRM_RECOVERY " + partition.partition.path)
+            if(partition.mount_as == "/recovery"):
+                print "==== DEBUG ==== Assign GRM_RECOVERY label to the %s partition" % (partition.partition.path)
+                os.system("tune2fs -L GRM_RECOVERY " + partition.partition.path)
 
-                if(partition.mount_as == "/boot/efi"):
-                    print "==== DEBUG ==== Assign GRM_BOOTEFI label to the %s partition" % (partition.partition.path)
-                    os.system("fatlabel %s GRM_BOOTEFI" % partition.partition.path)
+            if(partition.mount_as == "/boot/efi"):
+                print "==== DEBUG ==== Assign GRM_BOOTEFI label to the %s partition" % (partition.partition.path)
+                os.system("fatlabel %s GRM_BOOTEFI" % partition.partition.path)
 
     def step_mount_source(self, setup):
         # Mount the installation media
