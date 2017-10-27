@@ -92,7 +92,7 @@ class InstallerWindow:
         self.wizard_pages[self.PAGE_CUSTOMWARNING] = WizardPage(_("Please make sure you wish to manage partitions manually"), "hdd.svg")
         self.wizard_pages[self.PAGE_ADVANCED] = WizardPage(_("Advanced options"), "advanced.png")
         self.wizard_pages[self.PAGE_OVERVIEW] = WizardPage(_("Summary"), "summary.png")
-        self.wizard_pages[self.PAGE_INSTALL] = WizardPage(_("Installing Gooroom Platform..."), "install.png")
+        self.wizard_pages[self.PAGE_INSTALL] = WizardPage(_("Installing Gooroom Platform"), "install.png")
         self.wizard_pages[self.PAGE_CUSTOMPAUSED] = WizardPage(_("Installation paused: please finish the custom installation"), "install.png")
 
         # set the button events (wizard_cb)
