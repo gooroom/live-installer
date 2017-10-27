@@ -1005,7 +1005,7 @@ class InstallerWindow:
                 if self.critical_error_happened:
                     ErrorDialog(_("Installation error"), self.critical_error_message)
                 else:
-                    reboot = QuestionDialog(_("Installation finished"), _("The installation is now complete. Do you want to restart your computer to use the new system?"))
+                    reboot = QuestionDialog(_("Installation finished"), _("The installation is now complete.\nDo you want to restart your computer to use the new system?"))
                     if reboot:
                         os.system('reboot')
 
