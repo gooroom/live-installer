@@ -617,7 +617,7 @@ class InstallerEngine:
                     self.error_message(message=_("WARNING: The grub bootloader was not configured properly! You need to configure it manually."))
                     break
 
-        # Recovery Mode
+        # Recovery Mode : Install packages
         for partition in setup.partitions:
             if(partition.mount_as == "/recovery"):
                 print " --> Configuring Recovery Mode"
@@ -628,12 +628,19 @@ class InstallerEngine:
                 self.do_run_in_chroot("dpkg -i /debs/*.deb")
                 os.system("rm -rf /target/debs")
 
-        # recreate initramfs (needed in case of skip_mount also, to include things like mdadm/dm-crypt/etc in case its needed to boot a custom install)
+        # Recreate initramfs (needed in case of skip_mount also, to include things like mdadm/dm-crypt/etc in case its needed to boot a custom install)
         print " --> Configuring Initramfs"
         our_current += 1
         self.do_run_in_chroot("/usr/sbin/update-initramfs -t -u -k all")
         kernelversion= commands.getoutput("uname -r")
         self.do_run_in_chroot("/usr/bin/sha1sum /boot/initrd.img-%s > /var/lib/initramfs-tools/%s" % (kernelversion,kernelversion))
+
+        # Recovery Mode : Copy vmlinuz and initrd.img to recovery directory
+        for partition in setup.partitions:
+            if(partition.mount_as == "/recovery"):
+                os.system("mkdir -p /target/recovery/boot")
+                os.system("cp -f /target/boot/vmlinuz-* /target/recovery/boot")
+                os.system("cp -f /target/boot/initrd.img-* /target/recovery/boot")
 
         # Clean APT
         print " --> Cleaning APT"
