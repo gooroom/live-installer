@@ -621,10 +621,18 @@ class InstallerEngine:
         for partition in setup.partitions:
             if(partition.mount_as == "/recovery"):
                 print " --> Configuring Recovery Mode"
-                # install fsarchiver.deb
                 os.system("mkdir -p /target/debs")
+                # install recovery pkgs
                 os.system("cp /lib/live/mount/medium/pool/main/f/fsarchiver/*.deb /target/debs/")
                 os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-recovery-utils/*.deb /target/debs/")
+
+                # install gooroom-grub pkgs
+                os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-grub/*.deb /target/debs/")
+
+                # remove grub pkgs
+                self.do_run_in_chroot("apt purge -y grub-common grub-efi-amd64 grub-efi-amd64-bin grub2-common")
+
+                # install pkgs
                 self.do_run_in_chroot("dpkg -i /debs/*.deb")
                 os.system("rm -rf /target/debs")
 
