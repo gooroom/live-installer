@@ -1,3 +1,41 @@
+live-installer (0.2.1+grm1u1) gooroom; urgency=medium
+
+  [ jongkyung.woo ]
+  * [ecbf142d] Modified isoquery iso's option from 639 to 639-2
+  * [09370ec7] Create /boot/grub/EFI/gooroom/grubx64.efi on gptonefi
+  * [87149c5c] Added shim packages if geteonefi
+  * [886a051f] Added encrypt-home option at adduser
+  * [a3619e9a] Check the GRUB_DISABLE_LINUX_UUID option at /etc/default/grub
+  * [a9361335] Support gooroom-grub-efi-amd64-bin instead of grub-efi-amd64-bin
+  * [f05e7be0] Assigned partition label when formatting
+  * [df275f1f] If you mount the partition with /recovery, enable the Gooroom Recovery Mode
+  * [72c703d8] Added menu to select ecryptfs and encfs encryption at advanced options
+  * [39dd26ef] [Bugfix] Declare the recovery variable and update the fstab file unconditionaly
+  * [c5cacd5c] [Bugfix] Run recovery mode, if partition.mount_as is "/recovery"
+  * [eb49bb5b] [Bugfix] Set all partition labels regardless of partition format
+  * [25652bbe] Copy kernel and initrd image to /recovery in recovery mode
+  * [efe2aac9] When installing in Recovery mode, install gooroom-grub instead of grub
+
+  [ hmkim ]
+  * [f9203584] updated assign_password() logic to check whether new password is too simple or not.
+  * [ee0b90bc] (bug fix) the situation which language selection is not focused when network is connectionless.
+  * [c9cbee9a] added korean welcome.html to slideshow.
+  * [4e518a23] added loc.KR and loc.US.
+  * [962a0818] updated korean welcom.html.
+  * [fe7fb85b] (bug fix) changed cur_country_code to setup.language.
+  * [e165cf50] improved UI.
+  * [9247dfc9] updated interface.glade.
+  * [ae5b6a40] updated password validation comment format.
+  * [5492686a] updated installation logic to umount partition before formating.
+  * [5f7d662e] changed all welcome.hmtl comments.
+  * [5297ea03] removed homepage link in all welcome.html.
+  * [acd36e48] changed installation completion message.
+  * [1b7faac0] changed title of installation page.
+
+  [ Gooroom Autobuilder ]
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 16 Nov 2017 16:56:42 +0900
+
 live-installer (0.2.1+grm1) gooroom; urgency=medium
 
   [ jongkyung.woo ]
