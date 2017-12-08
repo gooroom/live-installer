@@ -622,15 +622,29 @@ class InstallerEngine:
             if(partition.mount_as == "/recovery"):
                 print " --> Configuring Recovery Mode"
                 os.system("mkdir -p /target/debs")
-                # install recovery pkgs
-                os.system("cp /lib/live/mount/medium/pool/main/f/fsarchiver/*.deb /target/debs/")
-                os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-recovery-utils/*.deb /target/debs/")
+
+                # UEFI boot
+                if(partition.mount_as == "/boot/efi"):
+                    # install recovery pkgs
+                    os.system("cp /lib/live/mount/medium/pool/main/f/fsarchiver/*.deb /target/debs/")
+                    os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-recovery-utils/*.deb /target/debs/")
+
+                    # remove grub pkgs
+                    self.do_run_in_chroot("apt purge -y grub-common grub-efi-amd64 grub-efi-amd64-bin grub2-common")
+
+                # Legacy boot
+                else:
+                    # install recovery pkgs
+                    os.system("cp /lib/live/mount/medium/pool/main/f/fsarchiver/*.deb /target/debs/")
+                    os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-recovery-utils/*.deb /target/debs/")
+                    os.system("cp /lib/live/mount/medium/pool/main/e/efibootmgr/efibootmgr* /target/debs/")
+                    os.system("cp /lib/live/mount/medium/pool/main/e/efivar/* /target/debs/")
+
+                    # remove grub pkgs
+                    self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive apt -o \"Dpkg::Option::=--force-confold\" purge -y grub-common grub-efi-amd64 grub-efi-amd64-bin grub2-common")
 
                 # install gooroom-grub pkgs
                 os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-grub/*.deb /target/debs/")
-
-                # remove grub pkgs
-                self.do_run_in_chroot("apt purge -y grub-common grub-efi-amd64 grub-efi-amd64-bin grub2-common")
 
                 # install pkgs
                 self.do_run_in_chroot("dpkg -i /debs/*.deb")
