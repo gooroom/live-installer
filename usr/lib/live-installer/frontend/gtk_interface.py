@@ -25,6 +25,7 @@ import time
 import webkit
 import string
 import parted
+import re
 
 gettext.install("live-installer", "/usr/share/gooroom/locale")
 gtk.gdk.threads_init()
@@ -395,6 +396,8 @@ class InstallerWindow:
         # about you
         self.wTree.get_widget("label_your_name").set_markup("<b>%s</b>" % _("Your full name"))
         self.wTree.get_widget("label_your_name_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your full name."))
+        self.label_username_help = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This is the name you will use to log in to your computer.")
+        self.label_username_help2 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It's recommended more than 1 letters which starts with lowcase alphabet and combined of lowcase alphabets, numbers and special character(-).")
         self.wTree.get_widget("label_username").set_markup("<b>%s</b>" % _("Your username"))
         self.wTree.get_widget("label_username_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This is the name you will use to log in to your computer."))
         self.wTree.get_widget("label_choose_pass").set_markup("<b>%s</b>" % _("Your password"))
@@ -479,6 +482,10 @@ class InstallerWindow:
 
     def assign_username(self, entry, prop):
         self.setup.username = entry.props.text
+        if not re.match(r'^[a-z][-a-z0-9]*$', self.setup.username):
+            self.wTree.get_widget("label_username_help").set_markup(self.label_username_help2)
+        else:
+            self.wTree.get_widget("label_username_help").set_markup(self.label_username_help)
         self.setup.print_setup()       
 
     def assign_hostname(self, entry, prop):
@@ -718,7 +725,6 @@ class InstallerWindow:
                 self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_NO, gtk.ICON_SIZE_BUTTON)            
                 self.wTree.get_widget("label_mismatch").set_label(_("Passwords do not match."))
             else:
-                import re
                 if re.match(r'[A-Za-z0-9@#$%^&+=]{8,}', self.setup.password1):
                     self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_OK, gtk.ICON_SIZE_BUTTON)            
                     self.wTree.get_widget("label_mismatch").set_label(_("Passwords match."))
@@ -794,12 +800,18 @@ class InstallerWindow:
                 elif(self.setup.username is None or self.setup.username == ""):
                     errorFound = True
                     errorMessage = _("Please provide a username.")
+                elif not re.match(r'^[a-z][-a-z0-9]*$', self.setup.username):
+                    errorFound = True
+                    errorMessage = _("UserId is invalid.")
                 elif(self.setup.password1 is None or self.setup.password1 == ""):
                     errorFound = True
                     errorMessage = _("Please provide a password for your user account.")
                 elif(self.setup.password1 != self.setup.password2):
                     errorFound = True
                     errorMessage = _("Your passwords do not match.")
+                elif not re.match(r'[A-Za-z0-9@#$%^&+=]{8,}', self.setup.password1):
+                    errorFound = True
+                    errorMessage = _("New password is too simple.")
                 elif(self.setup.hostname is None or self.setup.hostname == ""):
                     errorFound = True
                     errorMessage = _("Please provide a hostname.")
