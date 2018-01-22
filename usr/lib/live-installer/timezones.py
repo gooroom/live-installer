@@ -12,23 +12,30 @@ from PIL import Image, ImageEnhance, ImageChops, ImageOps
 
 
 TIMEZONE_RESOURCES = '/usr/share/live-installer/timezone/'
+#to support 800x600 resolution
+IM_X = 800
+IM_Y = 345
+IM_Y_ORG = 409
+
 CC_IM = Image.open(TIMEZONE_RESOURCES + 'cc.png').convert('RGB')
-BACK_IM = Image.open(TIMEZONE_RESOURCES + 'bg.png').convert('RGB')
+DOT_IM = Image.open(TIMEZONE_RESOURCES + 'dot.png').convert('RGBA')
+
+BACK_IM = Image.open(TIMEZONE_RESOURCES + 'bg.png').crop((0,0,IM_X,IM_Y)).convert('RGB')
 BACK_ENHANCED_IM = reduce(lambda im, mod: mod[0](im).enhance(mod[1]),
                           ((ImageEnhance.Color, 2),
                            (ImageEnhance.Contrast, 1.3),
                            (ImageEnhance.Brightness, 0.7)), BACK_IM)
-NIGHT_IM = Image.open(TIMEZONE_RESOURCES + 'night.png').convert('RGBA')
-LIGHTS_IM = Image.open(TIMEZONE_RESOURCES + 'lights.png').convert('RGBA')
-DOT_IM = Image.open(TIMEZONE_RESOURCES + 'dot.png').convert('RGBA')
+NIGHT_IM = Image.open(TIMEZONE_RESOURCES + 'night.png').crop((0,0,IM_X,IM_Y)).convert('RGBA')
+LIGHTS_IM = Image.open(TIMEZONE_RESOURCES + 'lights.png').crop((0,0,IM_X,IM_Y)).convert('RGBA')
 
 def to_float(position, wholedigits):
     assert position and len(position) > 4 and wholedigits < 9
     return float(position[:wholedigits + 1] + '.' + position[wholedigits + 1:])
 
 MAP_CENTER = (373, 263)  # pixel center of where equatorial line and 0th meridian cross on our bg map; WARNING: cc.png relies on this exactly!
-MAP_SIZE = BACK_IM.size  # size of the map image
-assert MAP_SIZE == (800, 409), 'MAP_CENTER (et al.?) calculations depend on this size'
+#to support 800x600 resolution
+MAP_SIZE = (IM_X, IM_Y_ORG) # size of the map image
+assert MAP_SIZE == (IM_X, IM_Y_ORG), 'MAP_CENTER (et al.?) calculations depend on this size'
 
 def pixel_position(lat, lon):
     """Transform latlong pair into map pixel coordinates"""
@@ -175,7 +182,8 @@ def select_timezone(tz):
             return - int((now.tm_hour*60 + now.tm_min - 12*60) / (24*60) * MAP_SIZE[0])  # night is centered at UTC noon (12)
         im = BACK_IM.copy()
         if overlay:
-            overlay_im = Image.open(TIMEZONE_RESOURCES + overlay)
+            #to support 800x600 resolution
+            overlay_im = Image.open(TIMEZONE_RESOURCES + overlay).crop((0,0, IM_X, IM_Y))
             im.paste(BACK_ENHANCED_IM, overlay_im)
         night_im = ImageChops.offset(NIGHT_IM, _get_x_offset(), 0).crop(im.getbbox())
         if IS_WINTER: night_im = ImageOps.flip(night_im)

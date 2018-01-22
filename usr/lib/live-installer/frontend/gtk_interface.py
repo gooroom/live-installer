@@ -288,10 +288,21 @@ class InstallerWindow:
         self.partitions_browser.set_transparent(True)
         self.wTree.get_widget("scrolled_partitions").add(self.partitions_browser)
         
+        #to support 800x600 resolution
+        self.window.set_geometry_hints(
+                                    min_width=750, 
+                                    min_height=500, 
+                                    max_width=800, 
+                                    max_height=600, 
+                                    base_width=750, 
+                                    base_height=500)
         self.window.show_all()
 
         # fix text wrap
         self.fix_text_wrap()
+
+        #to prevent duplication of partitioning
+        self.PARTITIONING_DONE = False
 
     def update_preview_cb(self, dialog, preview):
         filename = dialog.get_preview_filename()        
@@ -838,7 +849,9 @@ class InstallerWindow:
                     WarningDialog(_("Installation Tool"), errorMessage)
                 else:
                     self.activate_page(self.PAGE_PARTITIONS)
-                    partitioning.build_partitions(self)
+                    #to prevent duplication of partition
+                    if not self.PARTITIONING_DONE:
+                        partitioning.build_partitions(self)
             elif(sel == self.PAGE_PARTITIONS):                
                 model = self.wTree.get_widget("treeview_disks").get_model()
 
@@ -915,6 +928,13 @@ class InstallerWindow:
             elif(sel == self.PAGE_CUSTOMWARNING):
                 self.activate_page(self.PAGE_PARTITIONS)
             elif(sel == self.PAGE_PARTITIONS):
+                #to prevent duplication of partition
+                found_root_partition = False
+                for partition in self.setup.partitions:
+                    if(partition.mount_as == "/"):
+                        found_root_partition = True
+                if found_root_partition:
+                    self.PARTITIONING_DONE = True
                 self.activate_page(self.PAGE_USER)
             elif(sel == self.PAGE_USER):
                 self.activate_page(self.PAGE_KEYBOARD)  
