@@ -292,8 +292,8 @@ class InstallerWindow:
         self.window.set_geometry_hints(
                                     min_width=750, 
                                     min_height=500, 
-                                    max_width=800, 
-                                    max_height=600, 
+                                    max_width=750, 
+                                    max_height=500, 
                                     base_width=750, 
                                     base_height=500)
         self.window.show_all()
