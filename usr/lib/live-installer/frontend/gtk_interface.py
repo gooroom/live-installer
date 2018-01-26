@@ -721,6 +721,39 @@ class InstallerWindow:
         self.wTree.get_widget("image_keyboard").set_from_file(filename)
         return False
 
+    def check_password(self, passwd):
+        """ check password """
+
+        #length
+        if len(passwd) < 8:
+            return (-1, _("Password is short."))
+
+        char_be = False
+        digit_be = False
+        special_be = False
+
+        password_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&()'
+
+        for p in passwd:
+            #valid char
+            if not p in password_chars:
+                return (-1, _("Invalid character is in password."))
+
+            #security
+            ord_p = ord(p)
+            if (ord_p >=65  and ord_p <= 90) or (ord_p >= 97 and ord_p <= 122):
+                char_be = True
+            elif ord_p >= 48 and ord_p <= 57:
+                digit_be = True
+            else:
+                special_be = True
+
+        if char_be and digit_be and special_be:
+            #success
+            return (0, None)
+        else:
+            return (-1, _("Password security level is low."))
+
     def assign_password(self, widget):
         ''' Someone typed into the entry '''
         self.setup.password1 = self.wTree.get_widget("entry_userpass1").get_text()
@@ -736,13 +769,14 @@ class InstallerWindow:
                 self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_NO, gtk.ICON_SIZE_BUTTON)            
                 self.wTree.get_widget("label_mismatch").set_label(_("Passwords do not match."))
             else:
-                if re.match(r'[A-Za-z0-9@#$%^&+=]{8,}', self.setup.password1):
+                p_res, err_msg = self.check_password(self.setup.password1)
+                if p_res == 0:
                     self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_OK, gtk.ICON_SIZE_BUTTON)            
                     self.wTree.get_widget("label_mismatch").set_label(_("Passwords match."))
                 else:
                     self.wTree.get_widget("image_mismatch").set_from_stock(gtk.STOCK_OK, gtk.ICON_SIZE_BUTTON)            
-                    self.wTree.get_widget("label_mismatch").set_label(_("New password is too simple."))
-                    self.wTree.get_widget("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It's recommended more than 8 letters as a combination of alphabets, numbers and special characters(@#$%^&amp;+=)."))
+                    self.wTree.get_widget("label_mismatch").set_label(err_msg)
+                    self.wTree.get_widget("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It should be more than 8 letters as a combination of alphabets, numbers and special characters(!@#$%^&amp;())."))
         self.setup.print_setup()
         
     def activate_page(self, index):
@@ -805,6 +839,8 @@ class InstallerWindow:
                 errorFound = False
                 errorMessage = ""
                                 
+                p_res, err_msg = self.check_password(self.setup.password1)
+
                 if(self.setup.real_name is None or self.setup.real_name == ""):
                     errorFound = True
                     errorMessage = _("Please provide your full name.")
@@ -820,9 +856,9 @@ class InstallerWindow:
                 elif(self.setup.password1 != self.setup.password2):
                     errorFound = True
                     errorMessage = _("Your passwords do not match.")
-                elif not re.match(r'[A-Za-z0-9@#$%^&+=]{8,}', self.setup.password1):
+                elif p_res != 0:
                     errorFound = True
-                    errorMessage = _("New password is too simple.")
+                    errorMessage = err_msg
                 elif(self.setup.hostname is None or self.setup.hostname == ""):
                     errorFound = True
                     errorMessage = _("Please provide a hostname.")
