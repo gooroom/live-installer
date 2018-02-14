@@ -91,16 +91,31 @@ class InstallerEngine:
             #
             # Assign LABEL
             #
+            def init_label(label_name):
+                cmd = "blkid | grep %s | awk -F':' '{print $1}'"% (label_name)
+                p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                if (label_name == "GRM_BOOTEFI"):
+                    for output in p.stdout.readlines():
+                        print "fatlabel %s ''" % output
+                        os.system("fatlabel %s ''" % output)
+                else :
+                    for output in p.stdout.readlines():
+                        print "tune2fs -L '' %s" % output
+                        os.system("tune2fs -L '' %s" % output)
+
             if(partition.mount_as == "/"):
                 print "==== DEBUG ==== Assign GRM_ROOT_VOL label to the %s partition" % (partition.partition.path)
+                init_label("GRM_ROOT_VOL")
                 os.system("tune2fs -L GRM_ROOT_VOL " + partition.partition.path)
 
             if(partition.mount_as == "/recovery"):
                 print "==== DEBUG ==== Assign GRM_RECOVERY label to the %s partition" % (partition.partition.path)
+                init_label("GRM_RECOVERY")
                 os.system("tune2fs -L GRM_RECOVERY " + partition.partition.path)
 
             if(partition.mount_as == "/boot/efi"):
                 print "==== DEBUG ==== Assign GRM_BOOTEFI label to the %s partition" % (partition.partition.path)
+                init_label("GRM_BOOTEFI")
                 os.system("fatlabel %s GRM_BOOTEFI" % partition.partition.path)
 
     def step_mount_source(self, setup):
