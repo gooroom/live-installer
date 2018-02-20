@@ -725,7 +725,7 @@ class InstallerWindow:
         """ check password """
 
         #length
-        if len(passwd) < 8:
+        if not passwd or len(passwd) < 8:
             return (-1, _("Password is short."))
 
         char_be = False
