@@ -94,14 +94,9 @@ class InstallerEngine:
             def init_label(label_name):
                 cmd = "blkid | grep %s | awk -F':' '{print $1}'"% (label_name)
                 p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                if (label_name == "GRM_BOOTEFI"):
-                    for output in p.stdout.readlines():
-                        print "fatlabel %s ''" % output
-                        os.system("fatlabel %s ''" % output)
-                else :
-                    for output in p.stdout.readlines():
-                        print "tune2fs -L '' %s" % output
-                        os.system("tune2fs -L '' %s" % output)
+                for output in p.stdout.readlines():
+                    print "tune2fs -L '' %s" % output
+                    os.system("tune2fs -L '' %s" % output)
 
             if(partition.mount_as == "/"):
                 print "==== DEBUG ==== Assign GRM_ROOT_VOL label to the %s partition" % (partition.partition.path)
