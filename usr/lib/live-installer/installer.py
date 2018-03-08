@@ -288,7 +288,7 @@ class InstallerEngine:
             os.system("cp /lib/live/mount/medium/pool/main/e/efivar/* /target/debs/")
             os.system("cp /lib/live/mount/medium/pool/main/s/shim/* /target/debs/")
             self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive dpkg -P grub-pc grub-pc-bin grub2")
-            self.do_run_in_chroot("dpkg -i /debs/*")
+            self.do_run_in_chroot("apt install --yes /debs/*")
 
             if(not os.path.exists("/target/boot/efi/EFI/gooroom/grubx64.efi")):
                 #
@@ -660,12 +660,20 @@ class InstallerEngine:
                 self.do_run_in_chroot("dpkg -i /debs/*.deb")
                 os.system("rm -rf /target/debs")
 
-        # Recreate initramfs (needed in case of skip_mount also, to include things like mdadm/dm-crypt/etc in case its needed to boot a custom install)
-        print " --> Configuring Initramfs"
-        our_current += 1
-        self.do_run_in_chroot("/usr/sbin/update-initramfs -t -u -k all")
-        kernelversion= commands.getoutput("uname -r")
-        self.do_run_in_chroot("/usr/bin/sha1sum /boot/initrd.img-%s > /var/lib/initramfs-tools/%s" % (kernelversion,kernelversion))
+        # IMA Mode
+        if os.path.exists("/lib/live/mount/medium/pool/main/g/gooroom-exe-protector"):
+            print " --> IMA : installing gooroom-exe-protector"
+            os.system("mkdir -p /target/debs")
+            os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-exe-protector/*.deb /target/debs/")
+            self.do_run_in_chroot("dpkg -i /debs/*.deb")
+            os.system("rm -rf /target/debs")
+        else:
+            # Recreate initramfs (needed in case of skip_mount also, to include things like mdadm/dm-crypt/etc in case its needed to boot a custom install)
+            print " --> Configuring Initramfs"
+            our_current += 1
+            self.do_run_in_chroot("/usr/sbin/update-initramfs -t -u -k all")
+            kernelversion= commands.getoutput("uname -r")
+            self.do_run_in_chroot("/usr/bin/sha1sum /boot/initrd.img-%s > /var/lib/initramfs-tools/%s" % (kernelversion,kernelversion))
 
         # Recovery Mode : Copy vmlinuz and initrd.img to recovery directory
         for partition in setup.partitions:
@@ -681,10 +689,6 @@ class InstallerEngine:
         os.system("chroot /target/ /bin/sh -c \"dpkg --configure -a\"")
         self.do_run_in_chroot("sed -i 's/^deb cdrom/#deb cdrom/' /etc/apt/sources.list")
         self.do_run_in_chroot("apt-get -y --force-yes autoremove")
-
-        ## Enable selinux
-        #print " ---> Enable SELinux"
-        #self.do_run_in_chroot("/usr/sbin/selinux-activate")
 
         # now unmount it
         print " --> Unmounting partitions"
