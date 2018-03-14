@@ -1,3 +1,23 @@
+live-installer (0.2.1+grm1u2) gooroom; urgency=medium
+
+  [ jongkyung.woo ]
+  * [06b921e4] [Bugfix] Fixed Recovery mode hehavior error at Legacy boot
+  * [cc5ab029] Added to remove existing label befor creating label
+  * [568afe59] Modified GRM_BOOTEFI partition to initialize label with tune2fs
+  * [d6656d47] Install gooroom-exe-protector when in IMA mode
+
+  [ hmkim ]
+  * [e2e21f27] added validation alert-popup of both userid and password.
+  * [f5bec176] changed live-installer.pot.
+  * [bcc53ae2] support 800x600 resolution. prevent duplcation of partitioning.
+  * [0c14684f] fix at 750x500 resolution.
+  * [b83ca903] changed password validation logic.
+  * [f3646f48] (bug fix) checked if password is none of I8e40e74164514f1284edb3fec3766088c64757c2
+
+  [ Gooroom Autobuilder ]
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Wed, 14 Mar 2018 19:11:45 +0900
+
 live-installer (0.2.1+grm1u1) gooroom; urgency=medium
 
   [ jongkyung.woo ]
