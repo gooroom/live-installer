@@ -1,3 +1,12 @@
+live-installer (0.2.1+grm1u3) gooroom; urgency=medium
+
+  [ jongkyung.woo ]
+  * [84c0bc84] Release gooroom 1.1
+
+  [ Gooroom Autobuilder ]
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 11 Oct 2018 11:59:32 +0900
+
 live-installer (0.2.1+grm1u2) gooroom; urgency=medium
 
   [ jongkyung.woo ]
