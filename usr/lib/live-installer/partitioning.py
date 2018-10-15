@@ -188,7 +188,7 @@ class PartitionSetup(Gtk.TreeStore):
         def _get_attached_disks():
             disks = []
             exclude_devices = ['/dev/sr0', '/dev/sr1', '/dev/cdrom', '/dev/dvd', '/dev/fd0']
-            live_device = commands.getoutput("findmnt -n -o source /lib/live/mount/medium").split('\n')[0]
+            live_device = commands.getoutput("findmnt -n -o source /run/live/medium").split('\n')[0]
             live_device = re.sub('[0-9]+$', '', live_device) # remove partition numbers if any
             if live_device is not None and live_device.startswith('/dev/'):
                 exclude_devices.append(live_device)
@@ -460,7 +460,7 @@ class Partition(object):
                 description = 'Mac OS X'
             elif path_exists(mount_point, 'etc/'):
                 description = getoutput("su -c '{{ . {0}/etc/lsb-release && echo $DISTRIB_DESCRIPTION; }} || \
-                                                {{ . {0}/etc/os-release && echo $PRETTY_NAME; }}' mint".format(mount_point)) or 'Unix'
+                                                {{ . {0}/etc/os-release && echo $PRETTY_NAME; }}' gooroom".format(mount_point)) or 'Unix'
             else:
                 try:
                     if partition.active:

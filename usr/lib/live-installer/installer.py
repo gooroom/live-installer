@@ -42,7 +42,7 @@ class InstallerEngine:
         # Set other configuration
         config = _get_config_dict(CONFIG_FILE)
         self.live_user = config.get('live_user', 'user')
-        self.media = config.get('live_media_source', '/lib/live/mount/medium/live/filesystem.squashfs')
+        self.media = config.get('live_media_source', '/run/live/medium/live/filesystem.squashfs')
         self.media_type = config.get('live_media_type', 'squashfs')
         # Flush print when it's called
         sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
@@ -216,9 +216,9 @@ class InstallerEngine:
         os.system("cp -f /etc/resolv.conf /target/etc/resolv.conf")
 
         kernelversion= commands.getoutput("uname -r")
-        os.system("cp /lib/live/mount/medium/live/vmlinuz /target/boot/vmlinuz-%s" % kernelversion)
+        os.system("cp /run/live/medium/live/vmlinuz /target/boot/vmlinuz-%s" % kernelversion)
         found_initrd = False
-        for initrd in ["/lib/live/mount/medium/live/initrd.img", "/lib/live/mount/medium/live/initrd.lz"]:
+        for initrd in ["/run/live/medium/live/initrd.img", "/run/live/medium/live/initrd.lz"]:
             if os.path.exists(initrd):
                 os.system("cp %s /target/boot/initrd.img-%s" % (initrd, kernelversion))
                 found_initrd = True
@@ -229,13 +229,13 @@ class InstallerEngine:
 
         if (setup.gptonefi):
             print " --> Creating /target/boot/efi/EFI/gooroom/grubx64.efi"
-            #os.system("mkdir -p /target/boot/efi/EFI/linuxmint")
-            #os.system("cp /lib/live/mount/medium/EFI/BOOT/grubx64.efi /target/boot/efi/EFI/linuxmint")
+            #os.system("mkdir -p /target/boot/efi/EFI/gooroom")
+            #os.system("cp /run/live/medium/EFI/BOOT/grubx64.efi /target/boot/efi/EFI/gooroom")
             os.system("mkdir -p /target/debs")
-            os.system("cp /lib/live/mount/medium/pool/main/g/grub2/grub-efi* /target/debs/")
-            os.system("cp /lib/live/mount/medium/pool/main/e/efibootmgr/efibootmgr* /target/debs/")
-            os.system("cp /lib/live/mount/medium/pool/main/e/efivar/* /target/debs/")
-            os.system("cp /lib/live/mount/medium/pool/main/s/shim/* /target/debs/")
+            os.system("cp /run/live/medium/pool/main/g/grub2/grub-efi* /target/debs/")
+            os.system("cp /run/live/medium/pool/main/e/efibootmgr/efibootmgr* /target/debs/")
+            os.system("cp /run/live/medium/pool/main/e/efivar/* /target/debs/")
+            os.system("cp /run/live/medium/pool/main/s/shim/* /target/debs/")
             self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive dpkg -P grub-pc grub-pc-bin grub2")
             self.do_run_in_chroot("apt install --yes /debs/*")
 
@@ -266,18 +266,18 @@ class InstallerEngine:
         print " --> Removing live packages"
         our_current += 1
         self.update_progress(our_current, our_total, False, False, _("Removing live configuration (packages)"))
-        with open("/lib/live/mount/medium/live/filesystem.packages-remove", "r") as fd:
+        with open("/run/live/medium/live/filesystem.packages-remove", "r") as fd:
             line = fd.read().replace('\n', ' ')
         self.do_run_in_chroot("apt-get remove --purge --yes --force-yes %s" % line)
 
         # remove live leftovers
         self.do_run_in_chroot("rm -rf /etc/live")
-        self.do_run_in_chroot("rm -rf /lib/live")
+        self.do_run_in_chroot("rm -rf /run/live")
 
         # add new user
         print " --> Adding new user"
         our_current += 1
-        self.update_progress(total=our_total, current=our_current, message=_("Adding new user to the system"))
+        self.update_progress(our_total, our_current, False, False, _("Adding new user to the system"))
 
         # encrypt home
         if setup.ecryptfs:
@@ -292,12 +292,12 @@ class InstallerEngine:
             print " --> Setup encfs"
             # install encfs libtinyxml2-4 libpam-encfs libck-connector0 libpam-ck-connector
             os.system("mkdir -p /target/debs")
-            os.system("cp /lib/live/mount/medium/pool/main/e/encfs/*.deb /target/debs/")
-            os.system("cp /lib/live/mount/medium/pool/main/libp/libpam-encfs/*.deb /target/debs/")
-            os.system("cp /lib/live/mount/medium/pool/main/t/tinyxml2/*.deb /target/debs/")
-            os.system("cp /lib/live/mount/medium/pool/main/c/consolekit/*.deb /target/debs/")
-            os.system("cp /lib/live/mount/medium/pool/main/e/expect/*.deb /target/debs/")
-            os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-encfs-utils/*.deb /target/debs/")
+            os.system("cp /run/live/medium/pool/main/e/encfs/*.deb /target/debs/")
+            os.system("cp /run/live/medium/pool/main/libp/libpam-encfs/*.deb /target/debs/")
+            os.system("cp /run/live/medium/pool/main/t/tinyxml2/*.deb /target/debs/")
+            os.system("cp /run/live/medium/pool/main/c/consolekit/*.deb /target/debs/")
+            os.system("cp /run/live/medium/pool/main/e/expect/*.deb /target/debs/")
+            os.system("cp /run/live/medium/pool/main/g/gooroom-encfs-utils/*.deb /target/debs/")
             self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive dpkg -i /debs/*.deb")
             os.system("rm -rf /target/debs")
 
@@ -378,7 +378,7 @@ class InstallerEngine:
         # A bug in adding partition table to the fstab if the partition was mounted automatically
         #
         #if(not os.path.exists("/target/etc/fstab")):
-            os.system("echo \"#### Static Filesystem Table File\" > /target/etc/fstab")
+        os.system("echo \"#### Static Filesystem Table File\" > /target/etc/fstab")
         fstab = open("/target/etc/fstab", "a")
         fstab.write("proc\t/proc\tproc\tdefaults\t0\t0\n")
         if(not setup.skip_mount):
@@ -438,7 +438,7 @@ class InstallerEngine:
                 archive_recovery_partition = partition.partition.path
 
                 print " --> Supporting Gooroom RECOVERY Mode"
-                self.update_progress(pulse=True, total=our_total, current=our_current, message=_("Configuring Recovery Mode"))
+                self.update_progress(our_current, our_total, False, False, _("Configuring Recovery Mode"))
 
                 self.do_mount(archive_recovery_partition, "/target", "ext4", None)
             #os.system("mount %s /target/recovery" % archive_recovery_partition)
@@ -500,26 +500,26 @@ class InstallerEngine:
             language_code = setup.language
             if "_" in setup.language:
                 language_code = setup.language.split("_")[0]
-            l10ns = commands.getoutput("find /lib/live/mount/medium/pool | grep 'l10n-%s\\|hunspell-%s'" % (language_code, language_code))
+            l10ns = commands.getoutput("find /run/live/medium/pool | grep 'l10n-%s\\|hunspell-%s'" % (language_code, language_code))
             for l10n in l10ns.split("\n"):
                 os.system("cp %s /target/debs/" % l10n)
             self.do_run_in_chroot("dpkg -i /debs/*")
             os.system("rm -rf /target/debs")
 
-        if os.path.exists("/etc/gooroom/info"):
-            # drivers
-            print " --> Installing drivers"
-            self.update_progress(our_current, our_total, False, False, _("Installing drivers"))
-            drivers = commands.getoutput("mint-drivers")
-            if "broadcom-sta-dkms" in drivers:
-                try:
-                    os.system("mkdir -p /target/debs")
-                    os.system("cp /lib/live/mount/medium/pool/non-free/b/broadcom-sta/*.deb /target/debs/")
-                    self.do_run_in_chroot("dpkg -i /debs/*")
-                    self.do_run_in_chroot("modprobe wl")
-                    os.system("rm -rf /target/debs")
-                except:
-                    print "Failed to install Broadcom drivers"
+        #if os.path.exists("/etc/gooroom/info"):
+        #    # drivers
+        #    print " --> Installing drivers"
+        #    self.update_progress(our_current, our_total, False, False, _("Installing drivers"))
+        #    drivers = commands.getoutput("gooroom-drivers")
+        #    if "broadcom-sta-dkms" in drivers:
+        #        try:
+        #            os.system("mkdir -p /target/debs")
+        #            os.system("cp /run/live/medium/pool/non-free/b/broadcom-sta/*.deb /target/debs/")
+        #            self.do_run_in_chroot("dpkg -i /debs/*")
+        #            self.do_run_in_chroot("modprobe wl")
+        #            os.system("rm -rf /target/debs")
+        #        except:
+        #            print "Failed to install Broadcom drivers"
 
         # set the keyboard options..
         print " --> Setting the keyboard"
@@ -569,15 +569,15 @@ class InstallerEngine:
         print " --> Configuring Grub"
         our_current += 1
         if(setup.grub_device is not None):
-           self.update_progress(our_current, our_total, False, False, _("Installing bootloader"))
+            self.update_progress(our_current, our_total, False, False, _("Installing bootloader"))
             print " --> Running grub-install"
             self.do_run_in_chroot("grub-install --force %s" % setup.grub_device)
             #fix not add windows grub entry
             self.do_run_in_chroot("update-grub")
-            self.do_configure_grub(our_total, our_current)
+            self.do_configure_grub(setup, our_total, our_current)
             grub_retries = 0
             while (not self.do_check_grub(our_total, our_current)):
-                self.do_configure_grub(our_total, our_current)
+                self.do_configure_grub(setup, our_total, our_current)
                 grub_retries = grub_retries + 1
                 if grub_retries >= 5:
                     self.error_message(message=_("WARNING: The grub bootloader was not configured properly! You need to configure it manually."))
@@ -592,8 +592,8 @@ class InstallerEngine:
                 # UEFI boot
                 if(partition.mount_as == "/boot/efi"):
                     # install recovery pkgs
-                    os.system("cp /lib/live/mount/medium/pool/main/f/fsarchiver/*.deb /target/debs/")
-                    os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-recovery-utils/*.deb /target/debs/")
+                    os.system("cp /run/live/medium/pool/main/f/fsarchiver/*.deb /target/debs/")
+                    os.system("cp /run/live/medium/pool/main/g/gooroom-recovery-utils/*.deb /target/debs/")
 
                     # remove grub pkgs
                     self.do_run_in_chroot("apt purge -y grub-common grub-efi-amd64 grub-efi-amd64-bin grub2-common")
@@ -601,26 +601,26 @@ class InstallerEngine:
                 # Legacy boot
                 else:
                     # install recovery pkgs
-                    os.system("cp /lib/live/mount/medium/pool/main/f/fsarchiver/*.deb /target/debs/")
-                    os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-recovery-utils/*.deb /target/debs/")
-                    os.system("cp /lib/live/mount/medium/pool/main/e/efibootmgr/efibootmgr* /target/debs/")
-                    os.system("cp /lib/live/mount/medium/pool/main/e/efivar/* /target/debs/")
+                    os.system("cp /run/live/medium/pool/main/f/fsarchiver/*.deb /target/debs/")
+                    os.system("cp /run/live/medium/pool/main/g/gooroom-recovery-utils/*.deb /target/debs/")
+                    os.system("cp /run/live/medium/pool/main/e/efibootmgr/efibootmgr* /target/debs/")
+                    os.system("cp /run/live/medium/pool/main/e/efivar/* /target/debs/")
 
                     # remove grub pkgs
                     self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive apt -o \"Dpkg::Option::=--force-confold\" purge -y grub-common grub-efi-amd64 grub-efi-amd64-bin grub2-common")
 
                 # install gooroom-grub pkgs
-                os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-grub/*.deb /target/debs/")
+                os.system("cp /run/live/medium/pool/main/g/gooroom-grub/*.deb /target/debs/")
 
                 # install pkgs
                 self.do_run_in_chroot("dpkg -i /debs/*.deb")
                 os.system("rm -rf /target/debs")
 
         # IMA Mode
-        if os.path.exists("/lib/live/mount/medium/pool/main/g/gooroom-exe-protector"):
+        if os.path.exists("/run/live/medium/pool/main/g/gooroom-exe-protector"):
             print " --> IMA : installing gooroom-exe-protector"
             os.system("mkdir -p /target/debs")
-            os.system("cp /lib/live/mount/medium/pool/main/g/gooroom-exe-protector/*.deb /target/debs/")
+            os.system("cp /run/live/medium/pool/main/g/gooroom-exe-protector/*.deb /target/debs/")
             self.do_run_in_chroot("dpkg -i /debs/*.deb")
             os.system("rm -rf /target/debs")
         else:
@@ -678,8 +678,8 @@ class InstallerEngine:
         print "chroot /target/ /bin/sh -c \"%s\"" % command
         os.system("chroot /target/ /bin/sh -c \"%s\"" % command)
 
-    def do_configure_grub(self, our_total, our_current, setup):
-        self.update_progress(pulse=True, total=our_total, current=our_current, message=_("Configuring bootloader"))
+    def do_configure_grub(self, setup, our_total, our_current):
+        self.update_progress(our_current, our_total, True, False, _("Configuring bootloader"))
         if not setup.gptonefi:
             print " --> Running grub-mkconfig on legacy"
             self.do_run_in_chroot("grub-mkconfig -o /boot/grub/grub.cfg")
@@ -701,7 +701,7 @@ class InstallerEngine:
                 if("06_gooroom_theme" in line):
                     found_theme = True
                     print " --> Found Grub theme: %s " % line
-                if ("menuentry" in line and ("class gooroom" in line or "Gooroom" in line)):
+                if ("menuentry" in line and ("class gooroom" in line or "Gooroom" in line) or "Debian" in line):
                     found_entry = True
                     print " --> Found Grub entry: %s " % line
             grubfh.close()

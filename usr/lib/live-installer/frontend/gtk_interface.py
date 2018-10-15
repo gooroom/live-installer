@@ -278,13 +278,13 @@ class InstallerWindow:
         self.builder.get_object("scrolled_partitions").add(self.partitions_browser)
 
         #to support 800x600 resolution
-        self.window.set_geometry_hints(
-                                    min_width=750, 
-                                    min_height=500, 
-                                    max_width=750, 
-                                    max_height=500, 
-                                    base_width=750, 
-                                    base_height=500)
+        #self.window.set_geometry_hints(
+        #                            min_width=750, 
+        #                            min_height=500, 
+        #                            max_width=750, 
+        #                            max_height=500, 
+        #                            base_width=750, 
+        #                            base_height=500)
 
         self.window.show_all()
 
@@ -437,8 +437,8 @@ class InstallerWindow:
         # encrypt home
         self.builder.get_object("label_encrypt_home").set_markup("<b>%s</b>" % _("Encrypt home"))
         self.builder.get_object("radiobutton_ecryptfs").set_label(_("Ecryptfs (Kernel Level Encryption for Gooroom Platform recommendations)"))
-        self.builder.get_ojbect("radiobutton_encfs").set_label(_("Encfs (User Level Encryption for advanced users)"))
-        self.builder.get_ojbect("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors, Installation is not recommended except for research purpose to verify the encryption function\n"))
+        self.builder.get_object("radiobutton_encfs").set_label(_("Encfs (User Level Encryption for advanced users)"))
+        self.builder.get_object("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors, Installation is not recommended except for research purpose to verify the encryption function\n"))
 
         # keyboard page
         self.builder.get_object("label_test_kb").set_label(_("Use this box to test your keyboard layout."))
@@ -823,14 +823,14 @@ class InstallerWindow:
                 self.builder.get_object("image_mismatch").set_from_stock(Gtk.STOCK_NO, Gtk.IconSize.BUTTON)
                 self.builder.get_object("label_mismatch").set_label(_("Passwords do not match."))
             else:
-                p_res, err_msg = self.check_password(self.setup.password!)
-                if p_res = 0:
+                p_res, err_msg = self.check_password(self.setup.password1)
+                if p_res == 0:
                     self.builder.get_object("image_mismatch").set_from_stock(Gtk.STOCK_OK, Gtk.IconSize.BUTTON)
                     self.builder.get_object("label_mismatch").set_label(_("Passwords match."))
                 else:
                     self.builder.get_object("image_mismatch").set_from_stock(Gtk.STOCK_OK, Gtk.IconSize.BUTTON)
                     self.builder.get_object("label_mismatch").set_label(err_msg)
-                    self.builder.get_ojbect("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It should be more than 8 letters as a combination of alphabets, numbers and special characters(!@#$%^&amp;())."))
+                    self.builder.get_object("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It should be more than 8 letters as a combination of alphabets, numbers and special characters(!@#$%^&amp;())."))
         self.setup.print_setup()
 
     def activate_page(self, index):
