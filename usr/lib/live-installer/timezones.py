@@ -3,13 +3,11 @@
 from __future__ import division
 import math
 import re
-import gtk
-import glib
+from gi.repository import Gtk, Gdk, GObject, GdkPixbuf
 from commands import getoutput
 from collections import defaultdict, namedtuple
 from datetime import datetime, timedelta
 from PIL import Image, ImageEnhance, ImageChops, ImageOps
-
 
 TIMEZONE_RESOURCES = '/usr/share/live-installer/timezone/'
 #to support 800x600 resolution
@@ -27,6 +25,29 @@ BACK_ENHANCED_IM = reduce(lambda im, mod: mod[0](im).enhance(mod[1]),
                            (ImageEnhance.Brightness, 0.7)), BACK_IM)
 NIGHT_IM = Image.open(TIMEZONE_RESOURCES + 'night.png').crop((0,0,IM_X,IM_Y)).convert('RGBA')
 LIGHTS_IM = Image.open(TIMEZONE_RESOURCES + 'lights.png').crop((0,0,IM_X,IM_Y)).convert('RGBA')
+
+MAP_CENTER = (373, 263)  # pixel center of where equatorial line and 0th meridian cross on our bg map; WARNING: cc.png relies on this exactly!
+MAP_SIZE = BACK_IM.size  # size of the map image
+assert MAP_SIZE == (800, 409), 'MAP_CENTER (et al.?) calculations depend on this size'
+
+def debug(func):
+    '''Decorator to print function call details - parameters names and effective values'''
+    def wrapper(*func_args, **func_kwargs):
+        # print 'func_code.co_varnames =', func.func_code.co_varnames
+        # print 'func_code.co_argcount =', func.func_code.co_argcount
+        # print 'func_args =', func_args
+        # print 'func_kwargs =', func_kwargs
+        params = []
+        for argNo in range(func.func_code.co_argcount):
+            argName = func.func_code.co_varnames[argNo]
+            argValue = func_args[argNo] if argNo < len(func_args) else func.func_defaults[argNo - func.func_code.co_argcount]
+            params.append((argName, argValue))
+        for argName, argValue in func_kwargs.items():
+            params.append((argName, argValue))
+        params = [ argName + ' = ' + repr(argValue) for argName, argValue in params]
+        print(func.__name__ + '(' +  ', '.join(params) + ')')
+        return func(*func_args, **func_kwargs)
+    return wrapper
 
 def to_float(position, wholedigits):
     assert position and len(position) > 4 and wholedigits < 9
@@ -52,20 +73,33 @@ timezones = []
 
 Timezone = namedtuple('Timezone', 'name ccode x y'.split())
 
+@debug
 def build_timezones(_installer):
     global installer, time_label, time_label_box, timezone
     installer = _installer
+
+    cssProvider = Gtk.CssProvider()
+    cssProvider.load_from_path('/usr/share/live-installer/style.css')
+    screen = Gdk.Screen.get_default()
+    styleContext = Gtk.StyleContext()
+    styleContext.add_provider_for_screen(screen, cssProvider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+
     # Add the label displaying current time
-    time_label = installer.wTree.get_widget("label_time")
+    time_label = installer.builder.get_object("label_time")
     time_label_box = time_label.get_parent()
-    time_label_box.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color('#000'))
-    time_label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.Color('#fff'))
-    glib.timeout_add(200, update_local_time_label)
+
+    ctx = time_label.get_style_context()
+    time_label.set_name('TimezoneLabel')
+
+    update_local_time_label()
+
     # Populate timezones model
-    installer.wTree.get_widget("image_timezones").set_from_file(TIMEZONE_RESOURCES + 'bg.png')
+    installer.builder.get_object("image_timezones").set_from_file(TIMEZONE_RESOURCES + 'bg.png')
+
     def autovivified():
         return defaultdict(autovivified)
     hierarchy = autovivified()
+
     for line in getoutput("awk '/^[^#]/{ print $1,$2,$3 }' /usr/share/zoneinfo/zone.tab | sort -k3").split('\n'):
         ccode, coords, name = line.split()
         lat, lon = TZ_SPLIT_COORDS.search(coords).groups()
@@ -78,11 +112,12 @@ def build_timezones(_installer):
             if i != len(parts): submenu = submenu[part]
             else: submenu[part] = tup
         timezones.append(tup)
+
     def _build_menu(d):
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         for k in sorted(d):
             v = d[k]
-            item = gtk.MenuItem(k)
+            item = Gtk.MenuItem(k)
             item.show()
             if isinstance(v, dict):
                 item.set_submenu(_build_menu(v))
@@ -93,18 +128,18 @@ def build_timezones(_installer):
         return menu
     tz_menu = _build_menu(hierarchy)
     tz_menu.show()
-    installer.wTree.get_widget('button_timezones').connect('event', cb_button_timezoens, tz_menu)
+    installer.builder.get_object('button_timezones').connect('event', cb_button_timezones, tz_menu)
 
 adjust_time = timedelta(0)
 
 def update_local_time_label():
     now = datetime.utcnow() + adjust_time
-    time_label.set_label(now.strftime('%X'))
+    time_label.set_label(now.strftime('%H:%M'))
     return True
 
-def cb_button_timezoens(button, event, menu):
-    if event.type == gtk.gdk.BUTTON_PRESS:
-        menu.popup(None, None, None, event.button, event.time)
+def cb_button_timezones(button, event, menu):
+    if event.type == Gdk.EventType.BUTTON_PRESS:
+        menu.popup(None, None, None, None, 0, event.time)
         return True
     return False
 
@@ -113,12 +148,12 @@ def cb_menu_selected(widget, timezone):
 
 def cb_map_clicked(widget, event, model):
     x, y = event.x, event.y
-    if event.window != installer.wTree.get_widget("event_timezones").get_window():
+    if event.window != installer.builder.get_object("event_timezones").get_window():
         dx, dy = event.window.get_position()
         x, y = x + dx, y + dy
-    print "Click: (%d, %d)" % (x, y)
     closest_timezone = min(timezones, key=lambda tz: math.sqrt((x - tz.x)**2 + (y - tz.y)**2))
     select_timezone(closest_timezone)
+    update_local_time_label()
 
 # Timezone offsets color coded in cc.png
 # If someone can make this more robust (maintainable), I buy you lunch!
@@ -174,37 +209,29 @@ def select_timezone(tz):
     global adjust_time
     adjust_time = timedelta(hours=int(tzadj[0] + tzadj[1]),
                             minutes=int(tzadj[0] + tzadj[2]))
-    print "Timezone: {tz.name} (UTC{offset}) ({tz.x}, {tz.y})".format(tz=tz, offset=offset)
-    def _get_image(overlay, x, y):
-        """Superpose the picture of the timezone on the map"""
-        def _get_x_offset():
-            now = datetime.utcnow().timetuple()
-            return - int((now.tm_hour*60 + now.tm_min - 12*60) / (24*60) * MAP_SIZE[0])  # night is centered at UTC noon (12)
-        im = BACK_IM.copy()
-        if overlay:
-            #to support 800x600 resolution
-            overlay_im = Image.open(TIMEZONE_RESOURCES + overlay).crop((0,0, IM_X, IM_Y))
-            im.paste(BACK_ENHANCED_IM, overlay_im)
-        night_im = ImageChops.offset(NIGHT_IM, _get_x_offset(), 0).crop(im.getbbox())
-        if IS_WINTER: night_im = ImageOps.flip(night_im)
-        im.paste(Image.alpha_composite(night_im, LIGHTS_IM), night_im)
-        im.paste(DOT_IM, (int(x - DOT_IM.size[1]/2), int(y - DOT_IM.size[0]/2)), DOT_IM)
-        return gtk.gdk.pixbuf_new_from_data(im.tobytes(), gtk.gdk.COLORSPACE_RGB,
-                                            False, 8, im.size[0], im.size[1], im.size[0] * 3)
-    try:
-        hexcolor = '{:02x}{:02x}{:02x}'.format(*CC_IM.getpixel((tz.x, tz.y)))
-        print "Color: #%s," % hexcolor,
-        overlay = 'timezone_{}.png'.format(TIMEZONE_COLORS[hexcolor])
-        print "Image: %s" % overlay
-    except (IndexError, KeyError):
-        installer.wTree.get_widget("image_timezones").set_from_pixbuf(_get_image(None, min(tz.x, MAP_SIZE[0]), min(tz.y, MAP_SIZE[1])))
-    else:
-        installer.wTree.get_widget("image_timezones").set_from_pixbuf(_get_image(overlay, tz.x, tz.y))
+
     installer.setup.timezone = tz.name
-    installer.wTree.get_widget("button_timezones").set_label(tz.name)
+    installer.builder.get_object("button_timezones").set_label(tz.name)
     # Move the current time label to appropriate position
-    left, top, width, height = time_label_box.get_allocation()
     x, y = tz.x, tz.y
-    if x + width + 4 > MAP_SIZE[0]: x -= width
-    if y + height + 4 > MAP_SIZE[1]: y -= height
-    installer.wTree.get_widget("fixed_timezones").move(time_label_box, x, y)
+    if x + time_label_box.get_allocation().width + 4 > MAP_SIZE[0]: x -= time_label_box.get_allocation().width
+    if y + time_label_box.get_allocation().height + 4 > MAP_SIZE[1]: y -= time_label_box.get_allocation().height
+    installer.builder.get_object("fixed_timezones").move(time_label_box, x, y)
+
+def _get_x_offset():
+    now = datetime.utcnow().timetuple()
+    return - int((now.tm_hour*60 + now.tm_min - 12*60) / (24*60) * MAP_SIZE[0])  # night is centered at UTC noon (12)
+
+def _get_image(overlay, x, y):
+    """Superpose the picture of the timezone on the map"""
+    im = BACK_IM.copy()
+    if overlay:
+        #to support 800x600 resolution
+        overlay_im = Image.open(TIMEZONE_RESOURCES + overlay).crop((0,0, IM_X, IM_Y))
+        im.paste(BACK_ENHANCED_IM, overlay_im)
+    # night_im = ImageChops.offset(NIGHT_IM, _get_x_offset(), 0)
+    # if IS_WINTER: night_im = ImageOps.flip(night_im)
+    # im.paste(Image.alpha_composite(night_im, LIGHTS_IM), night_im)
+    im.paste(DOT_IM, (int(x - DOT_IM.size[1]/2), int(y - DOT_IM.size[0]/2)), DOT_IM)
+    return GdkPixbuf.Pixbuf.new_from_data(im.tobytes(), GdkPixbuf.Colorspace.RGB,
+                                        False, 8, im.size[0], im.size[1], im.size[0] * 3)

@@ -1,3 +1,158 @@
+live-installer (2018.08.28) cindy; urgency=medium
+
+  * Partitioning: Don't skip partitions with negative size
+
+ -- Clement Lefebvre <root@linuxmint.com>  Tue, 28 Aug 2018 14:14:39 +0200
+
+live-installer (2018.08.14.1) cindy; urgency=medium
+
+  * show_error_dialog: Set flag after showing the dialog
+
+ -- Clement Lefebvre <root@linuxmint.com>  Tue, 14 Aug 2018 15:13:30 +0200
+
+live-installer (2018.08.14) cindy; urgency=medium
+
+  * Fix a few race conditions
+
+ -- Clement Lefebvre <root@linuxmint.com>  Tue, 14 Aug 2018 14:59:08 +0200
+
+live-installer (2018.08.13) cindy; urgency=medium
+
+  * live-installer-stop: Fix case where mounted device has a partition number
+
+ -- Clement Lefebvre <root@linuxmint.com>  Mon, 13 Aug 2018 14:25:51 +0200
+
+live-installer (2018.08.08) cindy; urgency=medium
+
+  [ Clement Lefebvre ]
+  * Don't kill the screensaver in debug mode
+
+  [ Alexander Ryabov ]
+  * Adding layout for non-latin choises to target (#88)
+  * Additional layout in live-session for non-latin choises (#89)
+
+  [ Clement Lefebvre ]
+  * Define a list of non-latin keyboard layouts
+  * Test script needs to run live-installer with sudo
+  * l10n: Fix language treeview column titles
+  * Don't set keyboard layout in debug mode
+  * Pre-fill user details in debug mode
+  * Fix partition edit window
+  * Fix mount point selection in partition edit dialog
+  * Fix btrfs missing in file formats
+  * Don't error out when a disk cannot be formatted.
+  * l10n: Fix partition buttons and language page title
+  * Use -f option when formatting with btrfs
+  * Fix non-latin keyboard selection
+  * Add bn to non-latin keyboard layouts
+  * l10n: Replace stock widgets
+  * Add gn to non-latin layouts
+  * l10n: Add dialogs.py to POT
+
+ -- Clement Lefebvre <root@linuxmint.com>  Wed, 08 Aug 2018 11:07:46 +0200
+
+live-installer (2018.07.28.1) cindy; urgency=medium
+
+  * Delete root password
+
+ -- Clement Lefebvre <root@linuxmint.com>  Sat, 28 Jul 2018 16:20:19 +0200
+
+live-installer (2018.07.28) cindy; urgency=medium
+
+  * Add a postinst to enable the systemd service
+
+ -- Clement Lefebvre <root@linuxmint.com>  Sat, 28 Jul 2018 11:44:05 +0200
+
+live-installer (2018.07.27.2) cindy; urgency=medium
+
+  * Don't set the root password, lock it.
+
+ -- Clement Lefebvre <root@linuxmint.com>  Fri, 27 Jul 2018 15:34:02 +0200
+
+live-installer (2018.07.27.1) cindy; urgency=medium
+
+  * Add live-installer-stop and its systemd service
+  * Add missing systemd service
+
+ -- Clement Lefebvre <root@linuxmint.com>  Fri, 27 Jul 2018 14:57:06 +0200
+
+live-installer (2018.07.27) cindy; urgency=medium
+
+  * Include slideshow in debug mode
+  * Fix unicode errors in Russian
+
+ -- Clement Lefebvre <root@linuxmint.com>  Fri, 27 Jul 2018 10:42:54 +0200
+
+live-installer (2018.07.19) cindy; urgency=medium
+
+  * Fix slideshow
+
+ -- Clement Lefebvre <root@linuxmint.com>  Thu, 19 Jul 2018 16:20:19 +0200
+
+live-installer (2018.07.13) cindy; urgency=medium
+
+  * Fix timezone
+
+ -- Clement Lefebvre <root@linuxmint.com>  Fri, 13 Jul 2018 11:39:58 +0200
+
+live-installer (2018.07.12.1) cindy; urgency=medium
+
+  * LightDM: Don't hide user list by default
+
+ -- Clement Lefebvre <root@linuxmint.com>  Thu, 12 Jul 2018 14:01:25 +0200
+
+live-installer (2018.07.12) cindy; urgency=medium
+
+  * Grub check: Accept LMDE menuentry
+
+ -- Clement Lefebvre <root@linuxmint.com>  Thu, 12 Jul 2018 11:58:36 +0200
+
+live-installer (2018.02.16.2) cindy; urgency=medium
+
+  * Fix named args in decorator
+  * Use rsync to copy files
+
+ -- Clement Lefebvre <root@linuxmint.com>  Fri, 16 Feb 2018 17:56:25 +0000
+
+live-installer (2018.02.14) cindy; urgency=medium
+
+  * Custom install: Fix https://bugs.launchpad.net/linuxmint/+bug/1223631
+  * Migrate to GTK3
+  * Fix parsing countries/locales with newer ISO standards
+  * Fix erros in Glade file
+  * Fixes in partitioning/timezones
+  * Improve multithreading
+  * Happy Valentine's ;)
+
+ -- Clement Lefebvre <root@linuxmint.com>  Wed, 14 Feb 2018 18:28:20 +0000
+
+live-installer (2017.01.15) betsy; urgency=medium
+
+  * Remove live config leftovers
+
+ -- Clement Lefebvre <root@linuxmint.com>  Sun, 15 Jan 2017 16:19:11 +0000
+
+live-installer (2017.01.09) betsy; urgency=medium
+
+  * Fix crash when user refuses to initiate a blank HDD
+
+ -- Clement Lefebvre <root@linuxmint.com>  Mon, 09 Jan 2017 17:03:37 +0000
+
+live-installer (2017.01.08) betsy; urgency=medium
+
+  [ Kernc ]
+  * Use streamer instead of OpenCV for webcam face capture
+  * Test for /dev/video* to see if webcam exists & crop image to rect
+
+  [ Ali Rıza KESKİN ]
+  * Update installer.py
+
+  [ Clement Lefebvre ]
+  * Unbrand icon
+  * Fix icon changes
+
+ -- Clement Lefebvre <root@linuxmint.com>  Sun, 08 Jan 2017 17:12:34 +0000
+
 live-installer (0.2.1+grm1u3) gooroom; urgency=medium
 
   [ jongkyung.woo ]
@@ -100,6 +255,7 @@ live-installer (0.1) gooroom; urgency=medium
   * Initial Release on Gooroom
 
  -- gooroom <gooroom@gooroom.kr>  Tue, 07 Jun 2016 17:44:46 +0900
+=======
 
 live-installer (2015.09.19) betsy; urgency=medium
 
