@@ -506,7 +506,7 @@ class InstallerEngine:
             self.do_run_in_chroot("dpkg -i /debs/*")
             os.system("rm -rf /target/debs")
 
-        #if os.path.exists("/etc/gooroom/info"):
+        if os.path.exists("/etc/gooroom/info"):
         #    # drivers
         #    print " --> Installing drivers"
         #    self.update_progress(our_current, our_total, False, False, _("Installing drivers"))
@@ -520,6 +520,18 @@ class InstallerEngine:
         #            os.system("rm -rf /target/debs")
         #        except:
         #            print "Failed to install Broadcom drivers"
+
+            # NT500R3W-LD2A
+            reference_device="NT500R3W"
+            try :
+                subprocess.check_output('dmidecode | grep -q %s' % reference_device, shell=True)
+            except subprocess.CalledProcessError as e:
+                if e.returncode == 0:
+                    print "Found %s" %reference_device
+                    os.system("cp /run/live/medium/pool/main/f/firmware-nonfree/firmware-atheros*.deb /target/debs/")
+                    self.do_run_in_chroot("dpkg -i /debs/*")
+                else:
+                    print "Not found %s" %reference_device
 
         # set the keyboard options..
         print " --> Setting the keyboard"
