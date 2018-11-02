@@ -228,18 +228,18 @@ class InstallerEngine:
             print "WARNING: No initrd found!!"
 
         if (setup.gptonefi):
-            print " --> Creating /target/boot/efi/EFI/gooroom/grubx64.efi"
-            os.system("mkdir -p /target/boot/efi/EFI/gooroom")
-            os.system("cp /run/live/medium/EFI/BOOT/grubx64.efi /target/boot/efi/EFI/gooroom")
+            print " --> Installing EFI packages and Adding EFI entry"
+            os.system("mkdir -p /target/boot/efi/EFI/debian")
+            os.system("cp /run/live/medium/EFI/boot/grubx64.efi /target/boot/efi/EFI/debian")
             os.system("mkdir -p /target/debs")
             os.system("cp /run/live/medium/pool/main/g/grub2/grub-efi* /target/debs/")
             os.system("cp /run/live/medium/pool/main/e/efibootmgr/efibootmgr* /target/debs/")
             os.system("cp /run/live/medium/pool/main/e/efivar/* /target/debs/")
             os.system("cp /run/live/medium/pool/main/s/shim/* /target/debs/")
-            self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive dpkg -P grub-pc grub-pc-bin grub2")
+            #self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive dpkg -P grub-pc grub-pc-bin grub2")
             self.do_run_in_chroot("dpkg -i /debs/*.deb")
 
-            if(not os.path.exists("/target/boot/efi/EFI/gooroom/grubx64.efi")):
+            #if(not os.path.exists("/target/boot/efi/EFI/gooroom/grubx64.efi")):
                 #
                 # TODO : Check signed grubx64.efi file
                 #        - dell OptiPlex 7040
@@ -250,7 +250,8 @@ class InstallerEngine:
                 #    if (partition.format_as == "vfat"):
                 #        print "--> partition.partition.path => \"%s\"" % partition.partition.path
                 #        self.do_run_in_chroot("efibootmgr --create --disk /dev/sda --part 1 -w --label gooroom --loader '\EFI\gooroom\grubx64.efi'")
-                self.do_run_in_chroot("grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=gooroom")
+                #        self.do_run_in_chroot("efibootmgr -c -d /dev/sda -p 1 -L 'Gooroom' -l '\EFI\gooroom\grubx64.efi'")
+            self.do_run_in_chroot("grub-install --bootloader-id=gooroom --removable")
 
             os.system("rm -rf /target/debs")
 
@@ -583,13 +584,13 @@ class InstallerEngine:
         if(setup.grub_device is not None):
             self.update_progress(our_current, our_total, False, False, _("Installing bootloader"))
             print " --> Running grub-install"
-            self.do_run_in_chroot("grub-install --force %s" % setup.grub_device)
+            self.do_run_in_chroot("grub-install --force %s --recheck" % setup.grub_device)
             #fix not add windows grub entry
             self.do_run_in_chroot("update-grub")
-            self.do_configure_grub(setup, our_total, our_current)
+            self.do_configure_grub(our_total, our_current)
             grub_retries = 0
             while (not self.do_check_grub(our_total, our_current)):
-                self.do_configure_grub(setup, our_total, our_current)
+                self.do_configure_grub(our_total, our_current)
                 grub_retries = grub_retries + 1
                 if grub_retries >= 5:
                     self.error_message(message=_("WARNING: The grub bootloader was not configured properly! You need to configure it manually."))
@@ -690,15 +691,15 @@ class InstallerEngine:
         print "chroot /target/ /bin/sh -c \"%s\"" % command
         os.system("chroot /target/ /bin/sh -c \"%s\"" % command)
 
-    def do_configure_grub(self, setup, our_total, our_current):
+    def do_configure_grub(self, our_total, our_current):
         self.update_progress(our_current, our_total, True, False, _("Configuring bootloader"))
-        if not setup.gptonefi:
-            print " --> Running grub-mkconfig on legacy"
-            self.do_run_in_chroot("grub-mkconfig -o /boot/grub/grub.cfg")
-            grub_output = commands.getoutput("chroot /target/ /bin/sh -c \"grub-mkconfig -o /boot/grub/grub.cfg\"")
-            grubfh = open("/var/log/live-installer-grub-output.log", "w")
-            grubfh.writelines(grub_output)
-            grubfh.close()
+        #if not setup.gptonefi:
+        print " --> Running grub-mkconfig"
+        self.do_run_in_chroot("grub-mkconfig -o /boot/grub/grub.cfg")
+        grub_output = commands.getoutput("chroot /target/ /bin/sh -c \"grub-mkconfig -o /boot/grub/grub.cfg\"")
+        grubfh = open("/var/log/live-installer-grub-output.log", "w")
+        grubfh.writelines(grub_output)
+        grubfh.close()
 
 
     def do_check_grub(self, our_total, our_current):
@@ -710,10 +711,10 @@ class InstallerEngine:
             grubfh = open("/target/boot/grub/grub.cfg", "r")
             for line in grubfh:
                 line = line.rstrip("\r\n")
-                if("06_gooroom_theme" in line):
-                    found_theme = True
-                    print " --> Found Grub theme: %s " % line
-                if ("menuentry" in line and ("class gooroom" in line or "Gooroom" in line) or "Debian" in line):
+                #if("06_gooroom_theme" in line):
+                #    found_theme = True
+                #    print " --> Found Grub theme: %s " % line
+                if ("menuentry" in line and ("class gooroom" in line or "Gooroom" in line or "Debian" in line)):
                     found_entry = True
                     print " --> Found Grub entry: %s " % line
             grubfh.close()
