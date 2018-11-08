@@ -522,17 +522,9 @@ class InstallerEngine:
         #        except:
         #            print "Failed to install Broadcom drivers"
 
-            # NT500R3W-LD2A
-            reference_device="NT500R3W"
-            try :
-                subprocess.check_output('dmidecode | grep -q %s' % reference_device, shell=True)
-            except subprocess.CalledProcessError as e:
-                if e.returncode == 0:
-                    print "Found %s" %reference_device
-                    os.system("cp /run/live/medium/pool/main/f/firmware-nonfree/firmware-atheros*.deb /target/debs/")
-                    self.do_run_in_chroot("dpkg -i /debs/*")
-                else:
-                    print "Not found %s" %reference_device
+            # NT500R3W-LD2A, NT340XAA-K201G
+            self.do_run_firmware_atheros("NT500R3W")
+            self.do_run_firmware_atheros("NT340XAA")
 
         # set the keyboard options..
         print " --> Setting the keyboard"
@@ -685,6 +677,17 @@ class InstallerEngine:
         self.update_progress(0, 0, False, True, _("Installation finished"))
         print " --> All done"
 
+    def do_run_firmware_atheros(self, device):
+        try :
+            subprocess.check_output('dmidecode | grep -q %s' %device, shell=True)
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 1:
+                print "Found %s" %device
+                os.system("mkdir -p /target/debs")
+                os.system("cp /lib/live/mount/medium/pool/main/f/firmware-nonfree/firmware-atheros*.deb /target/debs/")
+                self.do_run_in_chroot("dpkg -i /debs/*")
+            else:
+                print "Not found %s" %device
 
     def do_run_in_chroot(self, command):
         command = command.replace('"', "'").strip()
