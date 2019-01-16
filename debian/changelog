@@ -1,3 +1,15 @@
+live-installer (0.2.1+grm1u4) gooroom; urgency=medium
+
+  [ jongkyung.woo ]
+  * [1b2969b7] Added firmware installation for reference device
+  * [c5054d04] Added do_run_firmware_atheros for reference devices
+  * [d78a4e9c] Added to generate ISO file info in /etc/gooroom/.isoinfo
+  * [5f48bf46] Released Gooroom Platform 1.2
+
+  [ Gooroom Autobuilder ]
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Wed, 16 Jan 2019 16:21:58 +0900
+
 live-installer (0.2.1+grm1u3) gooroom; urgency=medium
 
   [ jongkyung.woo ]
