@@ -21,8 +21,8 @@ import re
 
 import gi
 gi.require_version('Gtk', '3.0')
-gi.require_version('WebKit', '3.0')
-from gi.repository import Gtk, Gdk, GdkPixbuf, GObject, WebKit
+gi.require_version('WebKit2', '4.0')
+from gi.repository import Gtk, Gdk, GdkPixbuf, GObject, WebKit2
 
 gettext.install("live-installer", "/usr/share/gooroom/locale")
 
@@ -262,19 +262,21 @@ class InstallerWindow:
         # Initiate the slide show
         self.slideshow_path = "/usr/share/live-installer/slideshow"
         if os.path.exists(self.slideshow_path):
-            self.slideshow_browser = WebKit.WebView()
+            self.slideshow_browser = WebKit2.WebView()
             s = self.slideshow_browser.get_settings()
-            s.set_property('enable-file-access-from-file-uris', True)
-            s.set_property('enable-default-context-menu', False)
-            self.slideshow_browser.open("file://" + os.path.join(self.slideshow_path, 'template.html'))
-            self.builder.get_object("vbox_install").add(self.slideshow_browser)
+            s.set_property('allow-file-access-from-file-urls', True)
+            #s.set_property('enable-default-context-menu', False)
+            self.slideshow_browser.load_uri("file://" + os.path.join(self.slideshow_path, 'template.html'))
+            #self.builder.get_object("vbox_install").add(self.slideshow_browser)
+            self.builder.get_object("vbox_install").pack_start(self.slideshow_browser, True, True, 0)
             self.builder.get_object("vbox_install").show_all()
 
-        self.partitions_browser = WebKit.WebView()
+        self.partitions_browser = WebKit2.WebView()
         s = self.partitions_browser.get_settings()
-        s.set_property('enable-file-access-from-file-uris', True)
-        s.set_property('enable-default-context-menu', False)
-        self.partitions_browser.set_transparent(True)
+        s.set_property('allow-file-access-from-file-urls', True)
+        #s.set_property('enable-default-context-menu', False)
+        #self.partitions_browser.set_transparent(True)
+        self.partitions_browser.set_background_color(Gdk.RGBA(0, 0, 0, 0))
         self.builder.get_object("scrolled_partitions").add(self.partitions_browser)
 
         #to support 800x600 resolution
