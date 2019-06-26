@@ -103,7 +103,7 @@ class InstallerWindow:
         self.wizard_pages[self.PAGE_CUSTOMWARNING] = WizardPage(_("Please make sure you wish to manage partitions manually"), "hdd.svg")
         self.wizard_pages[self.PAGE_ADVANCED] = WizardPage(_("Advanced options"), "advanced.png")
         self.wizard_pages[self.PAGE_OVERVIEW] = WizardPage(_("Summary"), "summary.png")
-        self.wizard_pages[self.PAGE_INSTALL] = WizardPage(_("Installing Gooroom Platform..."), "install.png")
+        self.wizard_pages[self.PAGE_INSTALL] = WizardPage(_("Installing Gooroom Platform"), "install.png")
         self.wizard_pages[self.PAGE_CUSTOMPAUSED] = WizardPage(_("Installation paused: please finish the custom installation"), "install.png")
 
         # set the button events (wizard_cb)
@@ -440,7 +440,7 @@ class InstallerWindow:
         self.builder.get_object("label_encrypt_home").set_markup("<b>%s</b>" % _("Encrypt home"))
         self.builder.get_object("radiobutton_ecryptfs").set_label(_("Ecryptfs (Kernel Level Encryption for Gooroom Platform recommendations)"))
         self.builder.get_object("radiobutton_encfs").set_label(_("Encfs (User Level Encryption for advanced users)"))
-        self.builder.get_object("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors,\n Installation is not recommended except for research purpose to verify the encryption function\n"))
+        self.builder.get_object("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors, Installation is not recommended except for research purpose to verify the encryption function\n"))
 
         # keyboard page
         self.builder.get_object("label_test_kb").set_label(_("Use this box to test your keyboard layout."))
@@ -1072,7 +1072,7 @@ class InstallerWindow:
 
     @idle
     def show_reboot_dialog(self):
-        reboot = QuestionDialog(_("Installation finished"), _("The installation is now complete. Do you want to restart your computer to use the new system?"))
+        reboot = QuestionDialog(_("Installation finished"), _("The installation is now complete.\nDo you want to restart your computer to use the new system?"))
         if self.showing_last_dialog:
             self.showing_last_dialog = False
         if reboot:
