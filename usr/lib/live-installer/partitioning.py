@@ -9,7 +9,7 @@ import sys
 import subprocess
 from collections import defaultdict
 
-import gtk
+from gi.repository import Gtk, Gdk
 import parted
 import commands
 import gettext
@@ -60,7 +60,7 @@ with open(RESOURCE_DIR + 'disk-partitions.html') as f:
 def build_partitions(_installer):
     global installer
     installer = _installer
-    installer.window.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.WATCH))  # "busy" cursor
+    installer.window.get_window().set_cursor(Gdk.Cursor.new(Gdk.CursorType.WATCH))  # "busy" cursor
     installer.window.set_sensitive(False)
     print "Starting PartitionSetup()"
     partition_setup = PartitionSetup()
@@ -68,12 +68,13 @@ def build_partitions(_installer):
     if partition_setup.disks:
         installer._selected_disk = partition_setup.disks[0][0]
         print "Loading HTML string"
-        installer.partitions_browser.load_string(partition_setup.get_html(installer._selected_disk), 'text/html', 'UTF-8', 'file:///')
+        #installer.partitions_browser.load_string(partition_setup.get_html(installer._selected_disk), 'text/html', 'UTF-8', 'file:///')
+        installer.partitions_browser.load_html(partition_setup.get_html(installer._selected_disk), 'file:///')
     print "Showing the partition screen"
-    installer.wTree.get_widget("scrolled_partitions").show_all()
-    installer.wTree.get_widget("treeview_disks").set_model(partition_setup)
-    installer.wTree.get_widget("treeview_disks").expand_all()
-    installer.window.window.set_cursor(None)
+    installer.builder.get_object("scrolled_partitions").show_all()
+    installer.builder.get_object("treeview_disks").set_model(partition_setup)
+    installer.builder.get_object("treeview_disks").expand_all()
+    installer.window.get_window().set_cursor(None)
     installer.window.set_sensitive(True)
 
 def update_html_preview(selection):
@@ -82,11 +83,12 @@ def update_html_preview(selection):
     except TypeError, IndexError: return  # no disk is selected or no disk available
     if disk != installer._selected_disk:
         installer._selected_disk = disk
-        installer.partitions_browser.load_string(model.get_html(disk), 'text/html', 'UTF-8', 'file:///')
+        #installer.partitions_browser.load_string(model.get_html(disk), 'text/html', 'UTF-8', 'file:///')
+        installer.partitions_browser.load_html(model.get_html(disk), 'file:///')
 
 def edit_partition_dialog(widget, path, viewcol):
     ''' assign the partition ... '''
-    model, iter = installer.wTree.get_widget("treeview_disks").get_selection().get_selected()
+    model, iter = installer.builder.get_object("treeview_disks").get_selection().get_selected()
     if not iter: return
     row = model[iter]
     partition = row[IDX_PART_OBJECT]
@@ -96,12 +98,13 @@ def edit_partition_dialog(widget, path, viewcol):
                               row[IDX_PART_MOUNT_AS],
                               row[IDX_PART_FORMAT_AS],
                               row[IDX_PART_TYPE])
-        mount_as, format_as = dlg.show()
-        assign_mount_point(partition, mount_as, format_as)
+        response_is_ok, mount_as, format_as = dlg.show()
+        if response_is_ok:
+            assign_mount_point(partition, mount_as, format_as)
 
 def assign_mount_point(partition, mount_point, filesystem):
     # Assign it in the treeview
-    model = installer.wTree.get_widget("treeview_disks").get_model()
+    model = installer.builder.get_object("treeview_disks").get_model()
     for disk in model:
         for part in disk.iterchildren():
             if partition == part[IDX_PART_OBJECT]:
@@ -120,7 +123,7 @@ def assign_mount_point(partition, mount_point, filesystem):
 
 def partitions_popup_menu(widget, event):
     if event.button != 3: return
-    model, iter = installer.wTree.get_widget("treeview_disks").get_selection().get_selected()
+    model, iter = installer.builder.get_object("treeview_disks").get_selection().get_selected()
     if not iter: return
     partition = model.get_value(iter, IDX_PART_OBJECT)
     if not partition: return
@@ -129,47 +132,47 @@ def partitions_popup_menu(widget, event):
         partition.partition.number == -1 or
         "swap" in partition_type):
         return
-    menu = gtk.Menu()
-    menuItem = gtk.MenuItem(_("Edit"))
+    menu = Gtk.Menu()
+    menuItem = Gtk.MenuItem(_("Edit"))
     menuItem.connect("activate", edit_partition_dialog, None, None)
     menu.append(menuItem)
-    menuItem = gtk.SeparatorMenuItem()
+    menuItem = Gtk.SeparatorMenuItem()
     menu.append(menuItem)
-    menuItem = gtk.MenuItem(_("Assign to /"))
+    menuItem = Gtk.MenuItem(_("Assign to /"))
     menuItem.connect("activate", lambda w: assign_mount_point(partition, '/', 'ext4'))
     menu.append(menuItem)
-    menuItem = gtk.MenuItem(_("Assign to /home"))
+    menuItem = Gtk.MenuItem(_("Assign to /home"))
     menuItem.connect("activate", lambda w: assign_mount_point(partition, '/home', ''))
     menu.append(menuItem)
     if installer.setup.gptonefi:
-        menuItem = gtk.SeparatorMenuItem()
+        menuItem = Gtk.SeparatorMenuItem()
         menu.append(menuItem)
-        menuItem = gtk.MenuItem(_("Assign to /boot/efi"))
+        menuItem = Gtk.MenuItem(_("Assign to /boot/efi"))
         menuItem.connect("activate", lambda w: assign_mount_point(partition, EFI_MOUNT_POINT, ''))
         menu.append(menuItem)
     menu.show_all()
-    menu.popup(None, None, None, event.button, event.time)
+    menu.popup(None, None, None, None, 0, event.time)
 
 def manually_edit_partitions(widget):
     """ Edit only known disks in gparted, selected one first """
-    model, iter = installer.wTree.get_widget("treeview_disks").get_selection().get_selected()
+    model, iter = installer.builder.get_object("treeview_disks").get_selection().get_selected()
     preferred = model[iter][-1] if iter else ''  # prefer disk currently selected and show it first in gparted
     disks = ' '.join(sorted((disk for disk,desc in model.disks), key=lambda disk: disk != preferred))
     os.system('umount ' + disks)  # umount disks (if possible) so gparted works out-of-the-box
     os.popen('gparted {} &'.format(disks))
 
 def build_grub_partitions():
-    grub_model = gtk.ListStore(str)
+    grub_model = Gtk.ListStore(str)
     try: preferred = [p.partition.disk.device.path for p in installer.setup.partitions if p.mount_as == '/'][0]
     except IndexError: preferred = ''
     devices = sorted(list(d[0] for d in installer.setup.partition_setup.disks) +
                      list(filter(None, (p.name for p in installer.setup.partitions))),
                      key=lambda path: path != preferred and path)
     for p in devices: grub_model.append([p])
-    installer.wTree.get_widget("combobox_grub").set_model(grub_model)
-    installer.wTree.get_widget("combobox_grub").set_active(0)
+    installer.builder.get_object("combobox_grub").set_model(grub_model)
+    installer.builder.get_object("combobox_grub").set_active(0)
 
-class PartitionSetup(gtk.TreeStore):
+class PartitionSetup(Gtk.TreeStore):
     def __init__(self):
         super(PartitionSetup, self).__init__(str,  # path
                                              str,  # type (fs)
@@ -187,7 +190,7 @@ class PartitionSetup(gtk.TreeStore):
         def _get_attached_disks():
             disks = []
             exclude_devices = ['/dev/sr0', '/dev/sr1', '/dev/cdrom', '/dev/dvd', '/dev/fd0']
-            live_device = commands.getoutput("findmnt -n -o source /lib/live/mount/medium").split('\n')[0]
+            live_device = commands.getoutput("findmnt -n -o source /run/live/medium").split('\n')[0]
             live_device = re.sub('[0-9]+$', '', live_device) # remove partition numbers if any
             if live_device is not None and live_device.startswith('/dev/'):
                 exclude_devices.append(live_device)
@@ -238,17 +241,23 @@ class PartitionSetup(gtk.TreeStore):
                                         _("No partition table was found on the hard drive: %s. Do you want the installer to create a set of partitions for you? Note: This will ERASE ALL DATA present on this disk.") % disk_description,
                                         None, installer.window)
                 if not dialog: continue  # the user said No, skip this disk
-                installer.window.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.WATCH))
-                print "Performing a full disk format"
-                if not already_done_full_disk_format:
-                    assign_mount_format = self.full_disk_format(disk_device)
-                    already_done_full_disk_format = True
-                else:
-                    self.full_disk_format(disk_device) # Format but don't assign mount points
-                installer.window.window.set_cursor(None)
-                print "Done full disk format"
-                disk = parted.Disk(disk_device)
-                print "Got disk!"
+                try:
+                    installer.window.get_window().set_cursor(Gdk.Cursor.new(Gdk.CursorType.WATCH))
+                    print "Performing a full disk format"
+                    if not already_done_full_disk_format:
+                        assign_mount_format = self.full_disk_format(disk_device)
+                        already_done_full_disk_format = True
+                    else:
+                        self.full_disk_format(disk_device) # Format but don't assign mount points
+                    installer.window.get_window().set_cursor(None)
+                    print "Done full disk format"
+                    disk = parted.Disk(disk_device)
+                    print "Got disk!"
+                except Exception as second_exception:
+                    installer.window.get_window().set_cursor(None)
+                    print "      - Found another issue while looking for the disk: %s" % detail
+                    continue # Something is wrong with this disk, skip it
+
             disk_iter = self.append(None, (disk_description, '', '', '', '', '', '', None, disk_path))
             print "      - Looking at partitions..."
             free_space_partition = disk.getFreeSpacePartitions()
@@ -267,10 +276,13 @@ class PartitionSetup(gtk.TreeStore):
 
             partitions = []
             for partition in partition_set:
+                part = Partition(partition)
+                print(partition.path, part.size, part.raw_size)
                 # skip ranges <5MB
-                if partition.getLength('MB') > 5:
-                    part = Partition(partition)
+                if part.raw_size > 5242880:
                     partitions.append(part)
+                else:
+                    print("skipping ", partition.path, part.raw_size)
             partitions = sorted(partitions, key=lambda part: part.partition.geometry.start)
 
             print "      - Found partitions..."
@@ -301,7 +313,10 @@ class PartitionSetup(gtk.TreeStore):
             self.html_disks[disk_path] = DISK_TEMPLATE.format(PARTITIONS_HTML=''.join(PARTITION_TEMPLATE.format(p) for p in partitions))
 
     def get_html(self, disk):
-        return self.html_disks[disk]
+        if disk in self.html_disks:
+            return self.html_disks[disk]
+        else:
+            return ""
 
     def full_disk_format(self, device):
         # Create a default partition set up
@@ -354,8 +369,9 @@ class Partition(object):
 
     def __init__(self, partition):
         assert partition.type not in (parted.PARTITION_METADATA, parted.PARTITION_EXTENDED)
+        self.path = str(partition.path)
 
-        print "              -> Building partition object for %s" % partition.path
+        print "              -> Building partition object for %s" % self.path
 
         self.partition = partition
         self.length = partition.getLength()
@@ -365,12 +381,13 @@ class Partition(object):
         print "                  . size_percent %d" % self.size_percent
 
         self.size = to_human_readable(partition.getLength('B'))
+        self.raw_size = partition.getLength('B')
         print "                  . size %s" % self.size
 
         # if not normal partition with /dev/sdXN path, set its name to '' and discard it from model
-        self.name = partition.path if partition.number != -1 else ''
+        self.name = self.path if partition.number != -1 else ''
         print "                  . name %s" % self.name
-        
+
         try:
             self.type = partition.fileSystem.type
             for fs in ('swap', 'hfs', 'ufs'):  # normalize fs variations (parted.filesystem.fileSystemType.keys())
@@ -403,15 +420,16 @@ class Partition(object):
         # identify partition's description and used space
         try:
             print "                  . About to mount it..."
-            os.system('mount --read-only {} {}'.format(partition.path, TMP_MOUNTPOINT))
-            size, free, self.used_percent, mount_point = getoutput("df {0} | grep '^{0}' | awk '{{print $2,$4,$5,$6}}' | tail -1".format(partition.path)).split(None, 3)
+            os.system('mount --read-only {} {}'.format(self.path, TMP_MOUNTPOINT))
+            size, free, self.used_percent, mount_point = getoutput("df {0} | grep '^{0}' | awk '{{print $2,$4,$5,$6}}' | tail -1".format(self.path)).split(None, 3)
+            self.raw_size = int(size)*1024
             print "                  . size %s, free %s, self.used_percent %s, mount_point %s" % (size, free, self.used_percent, mount_point)
         except ValueError:
             print "                  . value error!"
             if "swap" in self.type:
                 self.os_fs_info, self.description, self.free_space, self.used_percent = ': '+self.type, 'swap', '', 0
             else:
-                print 'WARNING: Partition {} or type {} failed to mount!'.format(partition.path, partition.type)
+                print 'WARNING: Partition {} or type {} failed to mount!'.format(self.path, partition.type)
                 self.os_fs_info, self.description, self.free_space, self.used_percent = ': '+self.type, '', '', 0
             print "                  . self.os_fs_info %s, self.description %s, self.free_space %s, self.used_percent %s" % (self.os_fs_info, self.description, self.free_space, self.used_percent)
         else:
@@ -444,7 +462,7 @@ class Partition(object):
                 description = 'Mac OS X'
             elif path_exists(mount_point, 'etc/'):
                 description = getoutput("su -c '{{ . {0}/etc/lsb-release && echo $DISTRIB_DESCRIPTION; }} || \
-                                                {{ . {0}/etc/os-release && echo $PRETTY_NAME; }}' mint".format(mount_point)) or 'Unix'
+                                                {{ . {0}/etc/os-release && echo $PRETTY_NAME; }}' gooroom".format(mount_point)) or 'Unix'
             else:
                 try:
                     if partition.active:
@@ -455,7 +473,7 @@ class Partition(object):
                                 break
                 except Exception, detail:
                     # best effort
-                    print "Could not read partition flags for %s: %s" % (partition.path, detail)
+                    print "Could not read partition flags for %s: %s" % (self.path, detail)
             self.description = description
             self.os_fs_info = ': {0.description} ({0.type}; {0.size}; {0.free_space})'.format(self) if description else ': ' + self.type
             print "                  . self.description %s self.os_fs_info %s" % (self.description, self.os_fs_info)
@@ -494,39 +512,51 @@ class Partition(object):
         }.get(self.type, '#a9a9a9')
 
     def print_partition(self):
-        print "Device: %s, format as: %s, mount as: %s" % (self.partition.path, self.format_as, self.mount_as)
+        print "Device: %s, format as: %s, mount as: %s" % (self.path, self.format_as, self.mount_as)
 
 
 class PartitionDialog(object):
     def __init__(self, path, mount_as, format_as, type):
-        self.glade = RESOURCE_DIR + 'interface.glade'
-        self.dTree = gtk.glade.XML(self.glade, 'dialog')
-        self.window = self.dTree.get_widget("dialog")
+        glade_file = RESOURCE_DIR + 'interface.ui'
+        self.builder = Gtk.Builder()
+        self.builder.add_from_file(glade_file)
+        self.window = self.builder.get_object("dialog")
         self.window.set_title(_("Edit partition"))
-        self.dTree.get_widget("label_partition").set_markup("<b>%s</b>" % _("Device:"))
-        self.dTree.get_widget("label_partition_value").set_label(path)
-        self.dTree.get_widget("label_use_as").set_markup(_("Format as:"))
-        self.dTree.get_widget("label_mount_point").set_markup(_("Mount point:"))
+        self.builder.get_object("label_partition").set_markup("<b>%s</b>" % _("Device:"))
+        self.builder.get_object("label_partition_value").set_label(path)
+        self.builder.get_object("label_use_as").set_markup(_("Format as:"))
+        self.builder.get_object("label_mount_point").set_markup(_("Mount point:"))
         # Build supported filesystems list
-        filesystems = sorted(['', 'swap'] +
-                             [fs[11:] for fs in getoutput('echo /sbin/mkfs.*').split()],
-                             key=lambda x: 0 if x in ('', 'ext4') else 1 if x == 'swap' else 2)
-        model = gtk.ListStore(str)
-        for i in filesystems: model.append([i])
-        self.dTree.get_widget("combobox_use_as").set_model(model)
-        self.dTree.get_widget("combobox_use_as").set_active(filesystems.index(format_as))
-        # Build list of pre-provided mountpoints
-        model = gtk.ListStore(str)
-        for i in " / /home /boot /boot/efi /srv /tmp swap".split(' '):
+        filesystems = ['', 'swap']
+        for path in ["/bin", "/sbin"]:
+            for fs in getoutput('echo %s/mkfs.*' % path).split():
+                filesystems.append(fs.split("mkfs.")[1])
+        filesystems = sorted(filesystems)
+        filesystems = sorted(filesystems, key=lambda x: 0 if x in ('', 'ext4') else 1 if x == 'swap' else 2)
+        model = Gtk.ListStore(str)
+        for i in filesystems:
             model.append([i])
-        self.dTree.get_widget("comboboxentry_mount_point").set_model(model)
-        self.dTree.get_widget("comboboxentry_mount_point").child.set_text(mount_as)
+        self.builder.get_object("combobox_use_as").set_model(model)
+        self.builder.get_object("combobox_use_as").set_active(filesystems.index(format_as))
+        # Build list of pre-provided mountpoints
+        combobox = self.builder.get_object("comboboxentry_mount_point")
+        model = Gtk.ListStore(str, str)
+        for i in ["/", "/home", "/boot", "/boot/efi", "/srv", "/tmp", "swap"]:
+            model.append(["", i])
+        combobox.set_model(model)
+        combobox.set_entry_text_column(1)
+        combobox.set_id_column(1)
+        combobox.get_child().set_text(mount_as)
 
     def show(self):
-        self.window.run()
-        self.window.hide()
-        w = self.dTree.get_widget("comboboxentry_mount_point")
-        mount_as = w.child.get_text().strip()
-        w = self.dTree.get_widget("combobox_use_as")
+        response = self.window.run()
+        w = self.builder.get_object("comboboxentry_mount_point")
+        mount_as = w.get_child().get_text().strip()
+        w = self.builder.get_object("combobox_use_as")
         format_as = w.get_model()[w.get_active()][0]
-        return mount_as, format_as
+        self.window.destroy()
+        if response in (Gtk.ResponseType.YES, Gtk.ResponseType.APPLY, Gtk.ResponseType.OK, Gtk.ResponseType.ACCEPT):
+            response_is_ok = True
+        else:
+            response_is_ok = False
+        return response_is_ok, mount_as, format_as

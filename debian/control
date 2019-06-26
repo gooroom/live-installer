@@ -10,15 +10,13 @@ Vcs-Browser: http://git.gooroom.kr/?p=utils/live-installer.git;a=summary
 
 Package: live-installer
 Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}
+Depends: ${misc:Depends}, ${python:Depends}, gir1.2-webkit2-4.0
   , python (>= 2.7), python (<< 3)
-  , python-gtk2
-  , python-glade2
-  , python-webkit
   , python-parted, parted, gparted
   , python-qt4
-  , python-opencv
-  , python-imaging
+  , python-gi
+  , python-pil
+  , streamer
   , imagemagick
   , isoquery
   , desktop-file-utils
@@ -28,5 +26,6 @@ Depends: ${misc:Depends}, ${python:Depends}
   , gdisk
   , isoquery, iso-codes, locales
   , adduser
+  , rsync
 Description: Live Installer
  A live installer
