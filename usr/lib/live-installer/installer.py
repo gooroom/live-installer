@@ -236,7 +236,7 @@ class InstallerEngine:
             os.system("cp /run/live/medium/pool/main/e/efibootmgr/efibootmgr* /target/debs/")
             os.system("cp /run/live/medium/pool/main/e/efivar/* /target/debs/")
             os.system("cp /run/live/medium/pool/main/s/shim/* /target/debs/")
-            #self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive dpkg -P grub-pc grub-pc-bin grub2")
+            self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive dpkg -P grub-pc grub-pc-bin")
             self.do_run_in_chroot("dpkg -i /debs/*.deb")
 
             #if(not os.path.exists("/target/boot/efi/EFI/gooroom/grubx64.efi")):
