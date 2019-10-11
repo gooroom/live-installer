@@ -360,16 +360,6 @@ class InstallerEngine:
             # SLiM
             self.do_run_in_chroot(r"sed -i -r -e 's/^#?(default_user)\s.*/\1  {user}/' -e 's/^#?(auto_login)\s.*/\1  yes/' /etc/slim.conf".format(user=setup.username))
 
-        # Add user's face
-        os.system("cp /tmp/live-installer-face.png /target/home/%s/.face" % setup.username)
-        self.do_run_in_chroot("chown %s:%s /home/%s/.face" % (setup.username, setup.username, setup.username))
-
-        # Make the new user the default user in KDM
-        if os.path.exists('/target/etc/kde4/kdm/kdmrc'):
-            defUsrCmd = "sed -i 's/^#DefaultUser=.*/DefaultUser=" + setup.username + "/g' " + kdmrcPath
-            print defUsrCmd
-            os.system(defUsrCmd)
-
         # write the /etc/fstab
         print " --> Writing fstab"
         our_current += 1
@@ -493,35 +483,7 @@ class InstallerEngine:
         os.system("rm -f /target/etc/localtime")
         os.system("ln -s /usr/share/zoneinfo/%s /target/etc/localtime" % setup.timezone)
 
-        # localizing
-        print " --> Localizing packages"
-        self.update_progress(our_current, our_total, False, False, _("Localizing packages"))
-        if setup.language != "en_US":
-            os.system("mkdir -p /target/debs")
-            language_code = setup.language
-            if "_" in setup.language:
-                language_code = setup.language.split("_")[0]
-            l10ns = commands.getoutput("find /run/live/medium/pool | grep 'l10n-%s\\|hunspell-%s'" % (language_code, language_code))
-            for l10n in l10ns.split("\n"):
-                os.system("cp %s /target/debs/" % l10n)
-            self.do_run_in_chroot("dpkg -i /debs/*")
-            os.system("rm -rf /target/debs")
-
         if os.path.exists("/etc/gooroom/info"):
-        #    # drivers
-        #    print " --> Installing drivers"
-        #    self.update_progress(our_current, our_total, False, False, _("Installing drivers"))
-        #    drivers = commands.getoutput("gooroom-drivers")
-        #    if "broadcom-sta-dkms" in drivers:
-        #        try:
-        #            os.system("mkdir -p /target/debs")
-        #            os.system("cp /run/live/medium/pool/non-free/b/broadcom-sta/*.deb /target/debs/")
-        #            self.do_run_in_chroot("dpkg -i /debs/*")
-        #            self.do_run_in_chroot("modprobe wl")
-        #            os.system("rm -rf /target/debs")
-        #        except:
-        #            print "Failed to install Broadcom drivers"
-
             # NT500R3W-LD2A, NT340XAA-K201G
             self.do_run_firmware_atheros("NT500R3W")
             self.do_run_firmware_atheros("NT340XAA")
@@ -658,7 +620,7 @@ class InstallerEngine:
         self.update_progress(our_current, our_total, True, False, _("Cleaning APT"))
         os.system("chroot /target/ /bin/sh -c \"dpkg --configure -a\"")
         self.do_run_in_chroot("sed -i 's/^deb cdrom/#deb cdrom/' /etc/apt/sources.list")
-        self.do_run_in_chroot("apt-get -y --force-yes autoremove")
+        self.do_run_in_chroot("apt-get -y --allow autoremove")
 
         # now unmount it
         print " --> Unmounting partitions"
