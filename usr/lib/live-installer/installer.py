@@ -269,7 +269,7 @@ class InstallerEngine:
         self.update_progress(our_current, our_total, False, False, _("Removing live configuration (packages)"))
         with open("/run/live/medium/live/filesystem.packages-remove", "r") as fd:
             line = fd.read().replace('\n', ' ')
-        self.do_run_in_chroot("apt-get remove --purge --yes --force-yes %s" % line)
+        self.do_run_in_chroot("apt remove --purge --yes %s" % line)
 
         # remove live leftovers
         self.do_run_in_chroot("rm -rf /etc/live")
@@ -572,7 +572,7 @@ class InstallerEngine:
                     os.system("cp /run/live/medium/pool/main/g/gooroom-recovery-utils/*.deb /target/debs/")
 
                     # remove grub pkgs
-                    self.do_run_in_chroot("apt purge -y grub-common grub-efi-amd64 grub-efi-amd64-bin grub2-common")
+                    self.do_run_in_chroot("apt remove --purge --yes grub-common grub-efi-amd64 grub-efi-amd64-bin grub2-common")
 
                 # Legacy boot
                 else:
@@ -620,7 +620,7 @@ class InstallerEngine:
         self.update_progress(our_current, our_total, True, False, _("Cleaning APT"))
         os.system("chroot /target/ /bin/sh -c \"dpkg --configure -a\"")
         self.do_run_in_chroot("sed -i 's/^deb cdrom/#deb cdrom/' /etc/apt/sources.list")
-        self.do_run_in_chroot("apt-get -y --allow autoremove")
+        self.do_run_in_chroot("apt --yes autoremove")
 
         # now unmount it
         print " --> Unmounting partitions"

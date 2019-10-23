@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 9),
                python
 X-Python-Version: >= 2.7
 Standards-Version: 3.9.5
-Vcs-Browser: http://git.gooroom.kr/?p=utils/live-installer.git;a=summary
+Vcs-Browser: https://github.com/gooroom/live-installer
 
 Package: live-installer
 Architecture: all
@@ -28,4 +28,4 @@ Depends: ${misc:Depends}, ${python:Depends}, gir1.2-webkit2-4.0
   , adduser
   , rsync
 Description: Live Installer
- A live installer
+ A live installer for Gooroom Platform

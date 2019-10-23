@@ -1,15 +1,17 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: livemaker
-Upstream-Contact: Clement Lefebvre <root@linuxmint.com>
-Source: <http://github.com/linuxmint/live-installer>
+Upstream-Name: gooroom
+Upstream-Contact: gooroom <gooroom@gooroom.kr>
+Source: <https://github.com/gooroom/live-installer>
 
 Files: *
 Copyright: 2010 Clement Lefebvre <root@linuxmint.com>
+Copyright: 2015 gooroom <gooroom@gooroom.kr>
 License: GPL-2+
 
 Files: debian/*
 Copyright: 2010 Clement Lefebvre <root@linuxmint.com>
                 Ikey Doherty <contactjfreak@gmail.com>
+Copyright: 2015 gooroom <gooroom@gooroom.kr>
 License: GPL-2+
 
 License: GPL-2+
