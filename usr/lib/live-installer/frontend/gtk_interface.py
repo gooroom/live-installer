@@ -440,7 +440,7 @@ class InstallerWindow:
         self.builder.get_object("label_encrypt_home").set_markup("<b>%s</b>" % _("Encrypt home"))
         self.builder.get_object("radiobutton_ecryptfs").set_label(_("Ecryptfs (Kernel Level Encryption for Gooroom Platform recommendations)"))
         self.builder.get_object("radiobutton_encfs").set_label(_("Encfs (User Level Encryption for advanced users)"))
-        self.builder.get_object("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors, Installation is not recommended except for research purpose to verify the encryption function\n"))
+        self.builder.get_object("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors,\n Installation is not recommended except for research purpose to verify the encryption function.\n"))
 
         # keyboard page
         self.builder.get_object("label_test_kb").set_label(_("Use this box to test your keyboard layout."))
@@ -841,6 +841,8 @@ class InstallerWindow:
         # self.builder.get_object("help_icon").set_from_file("/usr/share/live-installer/icons/%s" % self.wizard_pages[index].icon)
         self.builder.get_object("notebook1").set_current_page(index)
         # TODO: move other page-depended actions from the wizard_cb into here below
+        if index == self.PAGE_LANGUAGE:
+            self.builder.get_object("button_back").set_sensitive(False)
         if index == self.PAGE_PARTITIONS:
             self.setup.skip_mount = False
         if index == self.PAGE_CUSTOMWARNING:

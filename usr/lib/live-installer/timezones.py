@@ -130,7 +130,8 @@ def build_timezones(_installer):
     tz_menu.show()
     installer.builder.get_object('button_timezones').connect('event', cb_button_timezones, tz_menu)
 
-adjust_time = timedelta(0)
+# Set default UTC+9
+adjust_time = timedelta(hours=9)
 
 def update_local_time_label():
     now = datetime.utcnow() + adjust_time
