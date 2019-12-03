@@ -1,3 +1,22 @@
+live-installer (2019.11.30+grm2u1) cindy; urgency=medium
+
+  [ jongkyung.woo ]
+  * [b6be96d9] Fixed translations error
+  * [35851917] Added do_run_firmware_atheros for reference devices
+  * [32d916d4] Removed grub-pc and grub-pc-bin on EFI mode
+  * [9df1ccef] Rebuild on gooroom-2.0
+  * [f301c72e] Disabled button_custommount in UI
+  * [6aa4e47e] Updated live-installer.pot
+  * [240d7e00] Fixed to vertical center in welcome.html and some debugging code
+  * [680f0236] Update gooroom-2.0 slideshow image (gooroom-platform.png)
+  * [0242fdc2] Changed apt-get to apt command and others
+  * [c9e97e8c] BugFix #1401, #1044 and #1405
+  * [6223e625] Added XSBC-Original-Maintainer in control
+
+  [ Gooroom Autobuilder ]
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Tue, 03 Dec 2019 10:51:24 +0900
+
 live-installer (2018.08.28) cindy; urgency=medium
 
   * Partitioning: Don't skip partitions with negative size
