@@ -1012,6 +1012,7 @@ class InstallerWindow:
         else:
             self.builder.get_object("button_back").set_sensitive(True)
             if(sel == self.PAGE_OVERVIEW):
+                self.builder.get_object("button_next").set_label(_("Forward"))
                 self.activate_page(self.PAGE_ADVANCED)
             elif(sel == self.PAGE_ADVANCED):
                 if (self.setup.skip_mount):
