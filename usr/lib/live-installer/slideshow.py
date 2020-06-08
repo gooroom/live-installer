@@ -9,16 +9,17 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject
 
-#pages = [
-#'welcome.html',
-#'giants.html',
-#'desktop-ready.html',
-#'windows.html',
-#'safe.html',
-#'community.html'
-#]
 pages = [
-'welcome.html'
+    'intro.html',
+    'information.html',
+    'desktop.html',
+    'systemtray.html',
+    'window.html',
+    'notification.html',
+    'browser.html',
+    'basicapps.html',
+    'security.html',
+    'finish.html'
 ]
 
 
@@ -40,41 +41,31 @@ def idle(func):
 
 
 class Slideshow():
-    def __init__(self, webviewObject, slideshowDirectory, language='', intervalSeconds=30, loopPages=False):
+    def __init__(self, webviewObject, slideshowDirectory, language, intervalSeconds=30):
         self.browser = webviewObject
-        self.loop = loopPages
+        self.loop = True
         self.interval = intervalSeconds
-        self.language = language
+        #self.language = language   #Multi-lingual Support
+        self.language = 'ko'    #Splash only supports Korean.
         self.slideshowDir = slideshowDirectory
         self.languageDir = self.getLanguageDirectory()
-        self.template = os.path.join(slideshowDirectory, 'template.html')
+        self.template = os.path.join(slideshowDirectory, self.languageDir + 'intro.html')
         self.templateText = ''
         self.pageContent = []
+        self.runLoop = True
+        self.lastIndex = None
 
         try:
             # Prepare pages
             if os.path.isfile(self.template):
-                print 'Template path: ' + self.template
-                tmplFile = open(self.template,'r')
-                self.templateText = tmplFile.read()
-                tmplFile.close()
-
                 # Preload all pages in an array
-                chkString = '<div id="container">'
-                if chkString in self.templateText:
-                    for page in pages:
-                        # Open content file
-                        pagePath = os.path.join(self.languageDir, page)
-                        if os.path.isfile(pagePath):
-                            contFile = open(pagePath, 'r')
-                            # Merge content with template
-                            html = string.replace(self.templateText, chkString, chkString + contFile.read())
-                            self.pageContent.append([pagePath, html])
-                            contFile.close()
-                        else:
-                            print 'Content path does not exist: ' + pagePath
-                else:
-                    print 'Check string not found in template: ' + chkString
+                for page in pages:
+                   # Open content file
+                    pagePath = os.path.join(self.languageDir, page)
+                    if os.path.isfile(pagePath):
+                        self.pageContent.append([pagePath])
+                    else:
+                        print 'Content path does not exist: ' + pagePath
             else:
                 print 'Template path not found: ' + self.template
         except Exception, detail:
@@ -86,23 +77,20 @@ class Slideshow():
         try:
             if self.pageContent:
                 # Loop through all pages
-                lastIndex = len(self.pageContent) - 1
-                runLoop = True
-                i = 0
-                while runLoop:
+                self.lastIndex = len(self.pageContent) - 1
+                i = 1 #'information.html'
+                
+                while self.runLoop:
                     # Get the full path of the content page
                     if os.path.isfile(self.pageContent[i][0]):
-                        self.updatePage(self.pageContent[i][1])
+                        self.updatePage(self.pageContent[i][0])
 
                         # Wait interval
                         time.sleep(self.interval)
 
                         # Reset counter when you need to loop the pages
-                        if i == lastIndex:
-                            if self.loop:
-                                i = 0
-                            else:
-                                runLoop = False
+                        if i == self.lastIndex-1:
+                            i = 1 #'information.html'
                         else:
                             i = i + 1
                     else:
@@ -113,21 +101,28 @@ class Slideshow():
         except Exception, detail:
             print detail
 
+    def stop(self):
+        self.runLoop = False
+        self.updatePage(self.pageContent[self.lastIndex][0])
+
     @idle
     def updatePage(self, page):
-        self.browser.load_html(page, 'file:///')
+        self.browser.load_uri('file:///'+page)
 
     def getLanguageDirectory(self):
         langDir = self.slideshowDir
         if self.language != '':
-            testDir = os.path.join(self.slideshowDir, 'loc.' + self.language)
+            testDir = os.path.join(self.slideshowDir, self.language + '/')
             if os.path.exists(testDir):
                 langDir = testDir
             else:
                 if "_" in self.language:
                     split = self.language.split("_")
                     if len(split) == 2:
-                        testDir = os.path.join(self.slideshowDir, 'loc.' + split[0])
+                        testDir = os.path.join(self.slideshowDir, split[0]+'/')
                         if os.path.exists(testDir):
                             langDir = testDir
+                else:   #default dir: ko
+                    langDir = os.path.join(self.slideshowDir, 'ko/')
+
         return langDir

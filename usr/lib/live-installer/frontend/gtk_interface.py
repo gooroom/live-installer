@@ -16,9 +16,6 @@ import PIL
 import threading
 import time
 import parted
-
-import re
-
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.0')
@@ -27,6 +24,7 @@ from gi.repository import Gtk, Gdk, GdkPixbuf, GObject, WebKit2
 gettext.install("live-installer", "/usr/share/gooroom/locale")
 
 LOADING_ANIMATION = '/usr/share/live-installer/loading.gif'
+WELCOME_GOOROOM = '/usr/share/gooroom-guide/guide/ko/1_intro.png'
 
 # Used as a decorator to run things in the background
 def async(func):
@@ -75,6 +73,7 @@ class InstallerWindow:
         self.fail = False
         self.paused = False
         self.showing_last_dialog = False
+        self.cc_language = None
 
         # here comes the installer engine
         self.installer = InstallerEngine()
@@ -93,18 +92,10 @@ class InstallerWindow:
          self.PAGE_INSTALL,
          self.PAGE_TIMEZONE,
          self.PAGE_CUSTOMWARNING,
-         self.PAGE_CUSTOMPAUSED) = range(10)
-        self.wizard_pages = range(10)
-        self.wizard_pages[self.PAGE_LANGUAGE] = WizardPage(_("Language"), "locales.png")
-        self.wizard_pages[self.PAGE_TIMEZONE] = WizardPage(_("Timezone"), "time.png")
-        self.wizard_pages[self.PAGE_KEYBOARD] = WizardPage(_("Keyboard layout"), "keyboard.png")
-        self.wizard_pages[self.PAGE_USER] = WizardPage(_("User info"), "user.png")
-        self.wizard_pages[self.PAGE_PARTITIONS] = WizardPage(_("Partitioning"), "hdd.svg")
-        self.wizard_pages[self.PAGE_CUSTOMWARNING] = WizardPage(_("Please make sure you wish to manage partitions manually"), "hdd.svg")
-        self.wizard_pages[self.PAGE_ADVANCED] = WizardPage(_("Advanced options"), "advanced.png")
-        self.wizard_pages[self.PAGE_OVERVIEW] = WizardPage(_("Summary"), "summary.png")
-        self.wizard_pages[self.PAGE_INSTALL] = WizardPage(_("Installing Gooroom Platform"), "install.png")
-        self.wizard_pages[self.PAGE_CUSTOMPAUSED] = WizardPage(_("Installation paused: please finish the custom installation"), "install.png")
+         self.PAGE_CUSTOMPAUSED,
+         self.PAGE_AGREEMENT,
+         self.PAGE_SELECT_LANGUAGE) = range(12)
+        self.wizard_pages = range(12)
 
         # set the button events (wizard_cb)
         self.builder.get_object("button_next").connect("clicked", self.wizard_cb, False)
@@ -122,6 +113,7 @@ class InstallerWindow:
         self.builder.get_object("treeview_language_list").append_column(self.country_column)
 
         self.builder.get_object("treeview_language_list").connect("cursor-changed", self.assign_language)
+        self.builder.get_object("combobox_language").connect("changed", self.assign_lang)
 
         '''
         # build user info page
@@ -157,6 +149,22 @@ class InstallerWindow:
 
         pic_box.pack_start(self.face_button, True, False, 6)
         '''
+        # Initiate the welcome page
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+                filename = WELCOME_GOOROOM,
+                width = 770,
+                height = -1,
+                preserve_aspect_ratio=True)
+
+        self.builder.get_object("image_welcome").set_from_pixbuf(pixbuf)
+        """
+        self.welcome_path = "/usr/share/gooroom-guide/guide/"
+        if os.path.exists(self.welcome_path):
+            welcome_page = WebKit2.WebView()
+            welcome_page.load_uri("file://" + os.path.join(self.welcome_path, 'ko/intro.html'))
+            self.builder.get_object("welcome").add(welcome_page)
+            self.builder.get_object("vbox_language_page").show_all()
+        """
 
         # build the language list
         self.build_lang_list()
@@ -193,8 +201,8 @@ class InstallerWindow:
         self.builder.get_object("entry_userpass2").connect("changed", self.assign_password)
 
         # link the checkbutton to the combobox
-        grub_check = self.builder.get_object("checkbutton_grub")
-        grub_box = self.builder.get_object("combobox_grub")
+        grub_check = self.builder.get_object("checkbutton_grub1")
+        grub_box = self.builder.get_object("combobox_grub1")
         grub_check.connect("toggled", self.assign_grub_install, grub_box)
         grub_box.connect("changed", self.assign_grub_device)
 
@@ -257,7 +265,7 @@ class InstallerWindow:
         self.should_pulse = False
 
         # make sure we're on the right page (no pun.)
-        self.activate_page(0)
+        self.activate_page(self.PAGE_SELECT_LANGUAGE)
 
         if(fullscreen):
             # dedicated installer mode thingum
@@ -265,19 +273,19 @@ class InstallerWindow:
             self.window.fullscreen()
 
         # Initiate the slide show
-        self.slideshow_path = "/usr/share/live-installer/slideshow"
+        self.slideshow_path = "/usr/share/gooroom-guide/guide/"
         if os.path.exists(self.slideshow_path):
             self.slideshow_browser = WebKit2.WebView()
+            self.slideshow_browser.connect('context_menu',self.disable_right_cb)
             s = self.slideshow_browser.get_settings()
             s.set_property('allow-file-access-from-file-urls', True)
             #s.set_property('enable-default-context-menu', False)
-            self.slideshow_browser.load_uri("file://" + os.path.join(self.slideshow_path, 'template.html'))
-            #self.builder.get_object("vbox_install").add(self.slideshow_browser)
             self.builder.get_object("vbox_install").pack_start(self.slideshow_browser, True, True, 0)
             self.builder.get_object("vbox_install").show_all()
 
         self.partitions_browser = WebKit2.WebView()
         s = self.partitions_browser.get_settings()
+        self.partitions_browser.connect('context_menu',self.disable_right_cb)
         s.set_property('allow-file-access-from-file-urls', True)
         #s.set_property('enable-default-context-menu', False)
         #self.partitions_browser.set_transparent(True)
@@ -370,6 +378,9 @@ class InstallerWindow:
         while Gtk.events_pending():
             Gtk.main_iteration_do(False)
 
+        treeview_language_list_width = self.language_column.get_width()+ self.country_column.get_width()
+        self.language_column.set_fixed_width(treeview_language_list_width/2)
+
         # this looks bad on resize, but to handle it on resize gracefully requires quite a bit of code (to keep from lagging)
         width = self.window.get_size()[0] - 75
 
@@ -400,13 +411,30 @@ class InstallerWindow:
 
         self.language_column.set_title(_("Language"))
         self.country_column.set_title(_("Country"))
-        self.activate_page(0)
+
+        self.wizard_pages[self.PAGE_SELECT_LANGUAGE] = WizardPage(_("Language"),"locales.png")
+        self.wizard_pages[self.PAGE_LANGUAGE] = WizardPage(_("Language"), "locales.png")
+        self.wizard_pages[self.PAGE_TIMEZONE] = WizardPage(_("Timezone"), "time.png")
+        self.wizard_pages[self.PAGE_KEYBOARD] = WizardPage(_("Keyboard layout"), "keyboard.png")
+        self.wizard_pages[self.PAGE_USER] = WizardPage(_("User info"), "user.png")
+        self.wizard_pages[self.PAGE_PARTITIONS] = WizardPage(_("Partitioning"), "hdd.svg")
+        self.wizard_pages[self.PAGE_CUSTOMWARNING] = WizardPage(_("Please make sure you wish to manage partitions manually"), "hdd.svg")
+        self.wizard_pages[self.PAGE_ADVANCED] = WizardPage(_("Advanced options"), "advanced.png")
+        self.wizard_pages[self.PAGE_OVERVIEW] = WizardPage(_("Summary"), "summary.png")
+        self.wizard_pages[self.PAGE_INSTALL] = WizardPage(_("Installing Hancom Gooroom"), "install.png")
+        self.wizard_pages[self.PAGE_CUSTOMPAUSED] = WizardPage(_("Installation paused: please finish the custom installation"), "install.png")
+        self.wizard_pages[self.PAGE_AGREEMENT] = WizardPage(_("Agreement"), "install.png")
+
+        self.activate_page(self.PAGE_SELECT_LANGUAGE)
 
         self.builder.get_object("button_cancel").set_label(_("Cancel"))
         self.builder.get_object("button_ok").set_label(_("OK"))
         self.builder.get_object("button_quit").set_label(_("Quit"))
         self.builder.get_object("button_back").set_label(_("Back"))
         self.builder.get_object("button_next").set_label(_("Forward"))
+
+        self.builder.get_object("button_agree").set_label(_("I agree"))
+        self.builder.get_object("label_lang").set_label(_("Language"))
 
         self.builder.get_object("button_edit").set_label(_("Edit partitions"))
         self.builder.get_object("button_refresh").set_label(_("Refresh"))
@@ -421,6 +449,7 @@ class InstallerWindow:
         self.builder.get_object("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your password twice to ensure it is correct."))
         self.builder.get_object("label_hostname").set_markup("<b>%s</b>" % _("Hostname"))
         self.builder.get_object("label_hostname_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This hostname will be the computer's name on the network."))
+
         '''
         self.builder.get_object("label_autologin").set_markup("<b>%s</b>" % _("Automatic login"))
         self.builder.get_object("label_autologin_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("If enabled, the login screen is skipped when the system starts, and you are signed into your desktop session automatically."))
@@ -434,17 +463,16 @@ class InstallerWindow:
         self.face_photo_menuitem.set_label(_("Take a photo..."))
         self.face_browse_menuitem.set_label(_("Browse for more pictures..."))
         '''
-
         # timezones
         self.builder.get_object("label_timezones").set_label(_("Selected timezone:"))
 
         # grub
-        self.builder.get_object("label_grub").set_markup("<b>%s</b>" % _("Bootloader"))
-        self.builder.get_object("checkbutton_grub").set_label(_("Install GRUB"))
-        self.builder.get_object("label_grub_help").set_label(_("GRUB is a bootloader used to load the Linux kernel."))
+        self.builder.get_object("label_grub1").set_markup("<b>%s</b>" % _("Bootloader"))
+        self.builder.get_object("checkbutton_grub1").set_label(_("Install GRUB"))
+        self.builder.get_object("label_grub_help1").set_label(_("GRUB is a bootloader used to load the Linux kernel."))
 
         # encrypt home
-        self.builder.get_object("label_encrypt_home").set_markup("<b>%s</b>" % _("Encrypt home"))
+#self.builder.get_object("label_encrypt_home").set_markup("<b>%s</b>" % _("Encrypt home"))
         self.builder.get_object("radiobutton_ecryptfs").set_label(_("Ecryptfs (Kernel Level Encryption for Gooroom Platform recommendations)"))
         self.builder.get_object("radiobutton_encfs").set_label(_("Encfs (User Level Encryption for advanced users)"))
         self.builder.get_object("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors,\n Installation is not recommended except for research purpose to verify the encryption function.\n"))
@@ -566,7 +594,10 @@ class InstallerWindow:
 
         # Construct language selection model
         model = Gtk.ListStore(str, str, GdkPixbuf.Pixbuf, str)
+        language_store = Gtk.ListStore(str, str, GdkPixbuf.Pixbuf, str)
+
         set_iter = None
+        tree_iter = None
         flag_path = lambda ccode: self.resource_dir + '/flags/16/' + ccode.lower() + '.png'
         from utils import memoize
         flag = memoize(lambda ccode: GdkPixbuf.Pixbuf.new_from_file(flag_path(ccode)))
@@ -591,12 +622,20 @@ class InstallerWindow:
                     pass
                 country = ''
             pixbuf = flag(ccode) if not lang in 'eo ia' else flag('_' + lang)
+
             iter = model.append((language, country, pixbuf, locale))
+            
+            if ((lang == 'en' and country == 'United States')or lang == 'ko'):
+                i = language_store.append((language, country, pixbuf, locale))
+                if(lang == 'ko'):
+                    set_language_init = i;
+
             if (ccode == self.cur_country_code and
                 (not set_iter or
                  set_iter and lang == 'en' or  # prefer English, or
                  set_iter and lang == ccode.lower())):  # fuzzy: lang matching ccode (fr_FR, de_DE, es_ES, ...)
                 set_iter = iter
+                tree_iter = i
 
         # Sort by Country, then by Language
         model.set_sort_column_id(0, Gtk.SortType.ASCENDING)
@@ -608,6 +647,14 @@ class InstallerWindow:
             path = model.get_path(set_iter)
             treeview.set_cursor(path)
             treeview.scroll_to_cell(path)
+
+        combobox = self.builder.get_object("combobox_language")
+        combobox.set_model(language_store)
+        combobox.set_active_iter(set_language_init);
+        renderer_text = Gtk.CellRendererText()
+        combobox.pack_start(renderer_text,True)
+        combobox.add_attribute(renderer_text, "text", 0)
+
 
     def build_kb_lists(self):
         ''' Do some xml kung-fu and load the keyboard stuffs '''
@@ -647,9 +694,14 @@ class InstallerWindow:
                 variants[name].append((var_desc, var_name))
             if name in NON_LATIN_KB_LAYOUTS:
                 desc = desc + " *"
-            iterator = layouts.append((desc, name))
+
+            #if( ('English' in desc) or desc == 'Korean'):
+            if( desc == 'English (US)' or desc == 'Korean'):
+                iterator = layouts.append((desc, name))
+
             if name == self.setup.keyboard_layout:
                 set_keyboard_layout = iterator
+
         # Set the models
         self.builder.get_object("combobox_kb_model").set_model(models)
         self.builder.get_object("treeview_layouts").set_model(layouts)
@@ -673,7 +725,10 @@ class InstallerWindow:
             (model, iter) = selection.get_selected()
             if iter is not None:
                 self.setup.language = model.get_value(iter, 3)
+
+                self.cc_language = self.setup.language[0:2]
                 self.setup.print_setup()
+                self.set_agreement()
                 gettext.translation('live-installer', "/usr/share/gooroom/locale",
                                 languages=[self.setup.language, self.setup.language.split('_')[0]],
                                 fallback=True).install()  # Try e.g. zh_CN, zh, or fallback to hardcoded English
@@ -681,6 +736,23 @@ class InstallerWindow:
                     self.i18n()
                 except:
                     pass # Best effort. Fails the first time as self.column1 doesn't exist yet.
+
+    def assign_lang(self, combobox, data=None):
+        tree_iter = combobox.get_active_iter()
+
+        if tree_iter is not None:
+            model = combobox.get_model()
+            self.setup.language = model[tree_iter][3]
+            self.cc_language = self.setup.language[0:2]
+            self.setup.print_setup()
+            self.set_agreement()
+            gettext.translation('live-installer', "/usr/share/gooroom/locale",
+                        languages=[self.setup.language, self.setup.language.split('_')[0]],
+                        fallback=True).install() 
+            try:
+                self.i18n()
+            except:
+                pass # Best effort. Fails the first time as self.column1 doesn't exist yet.
 
     def assign_autologin(self, checkbox, data=None):
         self.setup.autologin = checkbox.get_active()
@@ -719,8 +791,7 @@ class InstallerWindow:
         active = combobox.get_active()
         (self.setup.keyboard_model_description, self.setup.keyboard_model) = model[active]
         if not __debug__:
-            os.system('setxkbmap -model ' + self.setup.keyboard_model)
-        self.setup.print_setup()
+            self.setup.print_setup()
 
     def assign_keyboard_layout(self, treeview):
         ''' Called whenever someone updates the keyboard layout '''
@@ -801,7 +872,6 @@ class InstallerWindow:
             #valid char
             if not p in password_chars:
                 return (-1, _("Invalid character is in password."))
-
             #security
             ord_p = ord(p)
             if (ord_p >=65  and ord_p <= 90) or (ord_p >= 97 and ord_p <= 122):
@@ -848,8 +918,13 @@ class InstallerWindow:
         # self.builder.get_object("help_icon").set_from_file("/usr/share/live-installer/icons/%s" % self.wizard_pages[index].icon)
         self.builder.get_object("notebook1").set_current_page(index)
         # TODO: move other page-depended actions from the wizard_cb into here below
-        if index == self.PAGE_LANGUAGE:
+        if index == self.PAGE_AGREEMENT:
+            self.is_consent(self.builder.get_object("button_agree"))
+            self.builder.get_object("button_agree").connect("toggled", self.is_consent)
+
+        if index == self.PAGE_SELECT_LANGUAGE:
             self.builder.get_object("button_back").set_sensitive(False)
+
         if index == self.PAGE_PARTITIONS:
             self.setup.skip_mount = False
         if index == self.PAGE_CUSTOMWARNING:
@@ -862,7 +937,7 @@ class InstallerWindow:
 
         # check each page for errors
         if(not goback):
-            if(sel == self.PAGE_LANGUAGE):
+            if(sel == self.PAGE_SELECT_LANGUAGE):
                 if self.setup.language is None:
                     WarningDialog(_("Installation Tool"), _("Please choose a language"))
                 else:
@@ -877,7 +952,7 @@ class InstallerWindow:
                                 timezones.select_timezone(row)
                                 break
                         break
-                    self.activate_page(self.PAGE_TIMEZONE)
+                    self.activate_page(self.PAGE_AGREEMENT)
             elif (sel == self.PAGE_TIMEZONE):
                 if ("_" in self.setup.language):
                     country_code = self.setup.language.split("_")[1]
@@ -904,7 +979,6 @@ class InstallerWindow:
                 errorMessage = ""
 
                 p_res, err_msg = self.check_password(self.setup.password1)
-
                 if(self.setup.real_name is None or self.setup.real_name == ""):
                     errorFound = True
                     errorMessage = _("Please provide your full name.")
@@ -952,6 +1026,9 @@ class InstallerWindow:
                     #to prevent duplication of partition
                     if not self.PARTITIONING_DONE:
                         partitioning.build_partitions(self)
+
+                partitioning.build_grub_partitions()
+
             elif(sel == self.PAGE_PARTITIONS):
                 model = self.builder.get_object("treeview_disks").get_model()
 
@@ -993,35 +1070,43 @@ class InstallerWindow:
                         ErrorDialog(_("Installation Tool"), "<b>%s</b>" % _("Please select an EFI partition."),_("An EFI system partition is needed with the following requirements:\n\n - Mount point: /boot/efi\n - Partition flags: Bootable\n - Size: Larger than 100MB\n - Format: vfat or fat32\n\nTo ensure compatibility with Windows we recommend you use the first partition of the disk as the EFI system partition.\n "))
                         return
 
-                partitioning.build_grub_partitions()
-                self.activate_page(self.PAGE_ADVANCED)
-
-            elif(sel == self.PAGE_CUSTOMWARNING):
-                partitioning.build_grub_partitions()
-                self.activate_page(self.PAGE_ADVANCED)
-            elif(sel == self.PAGE_ADVANCED):
                 self.activate_page(self.PAGE_OVERVIEW)
                 self.show_overview()
                 self.builder.get_object("treeview_overview").expand_all()
                 self.builder.get_object("button_next").set_label(_("Install"))
+            elif(sel == self.PAGE_CUSTOMWARNING):
+                #partitioning.build_grub_partitions()
+                self.activate_page(self.PAGE_OVERVIEW)
+                self.show_overview()
+                self.builder.get_object("treeview_overview").expand_all()
+                self.builder.get_object("button_next").set_label(_("Install"))
+                """
+            elif(sel == self.PAGE_ADVANCED):
+                self.activate_page(self.PAGE_OVERVIEW)
+                self.show_overview()
+                self.builder.get_object("treeview_overview").expand_all()
+                """
             elif(sel == self.PAGE_OVERVIEW):
                 self.activate_page(self.PAGE_INSTALL)
                 self.builder.get_object("button_next").set_sensitive(False)
                 self.builder.get_object("button_back").set_sensitive(False)
                 self.builder.get_object("button_quit").set_sensitive(False)
-                self.do_install()
-                slideshow = Slideshow(self.slideshow_browser, self.slideshow_path)
+                slideshow = Slideshow(self.slideshow_browser, self.slideshow_path, self.cc_language)
+                self.do_install(slideshow)
                 slideshow.run()
             elif(sel == self.PAGE_CUSTOMPAUSED):
                 self.activate_page(self.PAGE_INSTALL)
                 self.builder.get_object("button_next").hide()
                 self.paused = False
+            elif(sel == self.PAGE_AGREEMENT):
+                self.activate_page(self.PAGE_TIMEZONE)
+
         else:
             self.builder.get_object("button_back").set_sensitive(True)
             if(sel == self.PAGE_OVERVIEW):
                 self.builder.get_object("button_next").set_label(_("Forward"))
-                self.activate_page(self.PAGE_ADVANCED)
-            elif(sel == self.PAGE_ADVANCED):
+#self.activate_page(self.PAGE_ADVANCED)
+#          elif(sel == self.PAGE_ADVANCED):
                 if (self.setup.skip_mount):
                     self.activate_page(self.PAGE_CUSTOMWARNING)
                 else:
@@ -1042,7 +1127,10 @@ class InstallerWindow:
             elif(sel == self.PAGE_KEYBOARD):
                 self.activate_page(self.PAGE_TIMEZONE)
             elif(sel == self.PAGE_TIMEZONE):
-                self.activate_page(self.PAGE_LANGUAGE)
+                self.activate_page(self.PAGE_AGREEMENT)
+            elif(sel == self.PAGE_AGREEMENT):
+                self.builder.get_object("button_next").set_sensitive(True)
+                self.activate_page(self.PAGE_SELECT_LANGUAGE)
 
     def show_overview(self):
         bold = lambda str: '<b>' + str + '</b>'
@@ -1099,7 +1187,7 @@ class InstallerWindow:
         self.builder.get_object("button_next").set_sensitive(True)
 
     @async
-    def do_install(self):
+    def do_install(self,slideshow):
         print " ## INSTALLATION "
         ''' Actually perform the installation .. '''
         inst = self.installer
@@ -1121,6 +1209,7 @@ class InstallerWindow:
 
         try:
             inst.init_install(self.setup)
+
         except Exception, detail1:
             print detail1
             do_try_finish_install = False
@@ -1148,6 +1237,7 @@ class InstallerWindow:
                 time.sleep(0.1)
 
             self.showing_last_dialog = True
+            slideshow.stop()
             if self.critical_error_happened:
                 self.show_error_dialog(_("Installation error"), self.critical_error_message)
             else:
@@ -1199,3 +1289,31 @@ class InstallerWindow:
             # asssume we're "pulsing" already
             self.should_pulse = True
             pbar_pulse()
+
+    def disable_right_cb(self,web_view, context_menu, event, hit_test_result):
+        context_menu.remove_all()
+
+    def set_agreement(self):
+        scrolledwindow = self.builder.get_object("scrolled_agreement")
+        if(scrolledwindow.get_child()!= None):
+            scrolledwindow.remove(scrolledwindow.get_child())
+
+        self.agree_path = "/usr/share/live-installer/contract/ko/"
+        if os.path.exists(self.agree_path):
+            agreement = WebKit2.WebView.new()
+            agreement.connect('context_menu',self.disable_right_cb)
+            agreement.load_uri("file://" + os.path.join(self.agree_path, 'contract_form.html'))
+            scrolledwindow.add_with_viewport(agreement)
+            scrolledwindow.show_all()
+        """
+        agreement = WebKit2.WebView()
+        agreement.load_uri("https://privacy.microsoft.com/" + os.path.join(self.cc_language, 'privacystatement'))
+        scrolledwindow.add_with_viewport(agreement)
+        scrolledwindow.show_all()
+        """
+
+    def is_consent(self, button):
+        if button.get_active():
+            self.builder.get_object("button_next").set_sensitive(True)
+        else:
+            self.builder.get_object("button_next").set_sensitive(False)
