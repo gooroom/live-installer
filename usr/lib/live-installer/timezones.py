@@ -13,7 +13,8 @@ TIMEZONE_RESOURCES = '/usr/share/live-installer/timezone/'
 #to support 800x600 resolution
 IM_X = 800
 IM_Y = 345
-IM_Y_ORG = 409
+#IM_Y_ORG = 409
+IM_Y_ORG = 379
 
 CC_IM = Image.open(TIMEZONE_RESOURCES + 'cc.png').convert('RGB')
 DOT_IM = Image.open(TIMEZONE_RESOURCES + 'dot.png').convert('RGBA')
@@ -28,7 +29,7 @@ LIGHTS_IM = Image.open(TIMEZONE_RESOURCES + 'lights.png').crop((0,0,IM_X,IM_Y)).
 
 MAP_CENTER = (373, 263)  # pixel center of where equatorial line and 0th meridian cross on our bg map; WARNING: cc.png relies on this exactly!
 MAP_SIZE = BACK_IM.size  # size of the map image
-assert MAP_SIZE == (800, 409), 'MAP_CENTER (et al.?) calculations depend on this size'
+assert MAP_SIZE == (IM_X, IM_Y_ORG), 'MAP_CENTER (et al.?) calculations depend on this size'
 
 def debug(func):
     '''Decorator to print function call details - parameters names and effective values'''
@@ -106,12 +107,13 @@ def build_timezones(_installer):
         x, y = pixel_position(to_float(lat, 2), to_float(lon, 3))
         if x < 0: x = MAP_SIZE[0] + x
         tup = Timezone(name, ccode, x, y)
-        submenu = hierarchy
-        parts = name.split('/')
-        for i, part in enumerate(parts, 1):
-            if i != len(parts): submenu = submenu[part]
-            else: submenu[part] = tup
-        timezones.append(tup)
+        if(ccode != 'AQ' and ccode != 'AU'):
+            submenu = hierarchy
+            parts = name.split('/')
+            for i, part in enumerate(parts, 1):
+                if i != len(parts): submenu = submenu[part]
+                else: submenu[part] = tup
+            timezones.append(tup)
 
     def _build_menu(d):
         menu = Gtk.Menu()
@@ -215,8 +217,11 @@ def select_timezone(tz):
     installer.builder.get_object("button_timezones").set_label(tz.name)
     # Move the current time label to appropriate position
     x, y = tz.x, tz.y
-    if x + time_label_box.get_allocation().width + 4 > MAP_SIZE[0]: x -= time_label_box.get_allocation().width
-    if y + time_label_box.get_allocation().height + 4 > MAP_SIZE[1]: y -= time_label_box.get_allocation().height
+    if x + time_label_box.get_allocation().width + 4 > MAP_SIZE[0]: 
+        x -= time_label_box.get_allocation().width
+    if y + time_label_box.get_allocation().height + 4 > MAP_SIZE[1]: 
+        y -= time_label_box.get_allocation().height
+
     installer.builder.get_object("fixed_timezones").move(time_label_box, x, y)
 
 def _get_x_offset():
