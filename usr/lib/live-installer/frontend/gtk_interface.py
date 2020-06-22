@@ -238,6 +238,11 @@ class InstallerWindow:
         self.builder.get_object("label_install_progress").set_markup("<i>%s</i>" % _("Calculating file indexes ..."))
 
         #i18n
+        if __debug__:
+            self.window.set_title("%s" % self.installer.get_distribution_name() + ' (debug)')
+        else:
+            self.window.set_title("%s" % self.installer.get_distribution_name())
+
         self.i18n()
 
         # Pre-fill user details in debug mode
@@ -386,10 +391,12 @@ class InstallerWindow:
 
     def i18n(self):
 
+        """
         if __debug__:
             self.window.set_title((_("%s Installer") % self.installer.get_distribution_name()) + ' (debug)')
         else:
             self.window.set_title((_("%s Installer") % self.installer.get_distribution_name()))
+        """
 
         self.language_column.set_title(_("Language"))
         self.country_column.set_title(_("Country"))
