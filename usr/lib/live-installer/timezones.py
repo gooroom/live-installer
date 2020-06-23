@@ -128,10 +128,12 @@ def build_timezones(_installer):
             menu.append(item)
         menu.show()
         return menu
+
     tz_menu = _build_menu(hierarchy)
+    #print(dir(tz_menu.props))
     tz_menu.show()
     installer.builder.get_object('button_timezones').connect('event', cb_button_timezones, tz_menu)
-
+    
 # Set default UTC+9
 adjust_time = timedelta(hours=9)
 
@@ -140,9 +142,10 @@ def update_local_time_label():
     time_label.set_label(now.strftime('%H:%M'))
     return True
 
+#To-Do: 
 def cb_button_timezones(button, event, menu):
     if event.type == Gdk.EventType.BUTTON_PRESS:
-        menu.popup(None, None, None, None, 0, event.time)
+        #menu.popup(None, None, None, None, 0, event.time)
         return True
     return False
 
