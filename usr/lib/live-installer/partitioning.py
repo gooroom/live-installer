@@ -77,8 +77,6 @@ def build_partitions(_installer):
     installer.window.get_window().set_cursor(None)
     installer.window.set_sensitive(True)
 
-    build_grub_partitions()
-
 def update_html_preview(selection):
     model, row = selection.get_selected()
     try: disk = model[row][IDX_PART_DISK]
@@ -171,8 +169,8 @@ def build_grub_partitions():
                      list(filter(None, (p.name for p in installer.setup.partitions))),
                      key=lambda path: path != preferred and path)
     for p in devices: grub_model.append([p])
-    installer.builder.get_object("combobox_grub1").set_model(grub_model)
-    installer.builder.get_object("combobox_grub1").set_active(0)
+    installer.builder.get_object("combobox_grub").set_model(grub_model)
+    installer.builder.get_object("combobox_grub").set_active(0)
 
 class PartitionSetup(Gtk.TreeStore):
     def __init__(self):
