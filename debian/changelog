@@ -1,3 +1,18 @@
+live-installer (2020.07.07+grm2u1) unstable; urgency=medium
+
+  [ boyeon.choi ]
+  * [ad614f13] Removed some comments
+  * [8546e831] Fixed errors that change from 'forward' button to 'install' button
+  * [6c0a12e0] [Bug:2378] Removed Antarctica from the timezone selection page
+  * [8b3e2f0d] [Bug:2388]Set button labels on the Partition Dialog
+  * [b756660a] [Bug:1399] Titlebar label fixed in English
+  * [f21bf6b7] [Bug:1406/2380] Removed the select menu in timezone page
+  * [55467033] Corrected the typos in the 'partitioning.py'file
+
+  [ Gooroom Autobuilder ]
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Tue, 07 Jul 2020 17:08:31 +0900
+
 live-installer (2019.11.30+grm2u1) unstable; urgency=medium
 
   [ jongkyung.woo ]
