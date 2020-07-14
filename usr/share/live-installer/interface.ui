@@ -26,7 +26,7 @@
   </object>
   <object class="GtkWindow" id="main_window">
     <property name="can_focus">False</property>
-    <property name="border_width">6</property>
+    <property name="border_width">15</property>
     <property name="window_position">center</property>
     <property name="default_width">640</property>
     <property name="default_height">480</property>
@@ -44,7 +44,6 @@
           <object class="GtkEventBox" id="title_eventbox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="border_width">8</property>
             <child>
               <object class="GtkBox" id="hbox5">
                 <property name="visible">True</property>
@@ -229,8 +228,10 @@
               <object class="GtkBox" id="vbox5">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="border_width">6</property>
+                <property name="border_width">0</property>
                 <property name="orientation">vertical</property>
+                <property name="spacing">12</property>
+                <property name="baseline_position">top</property>
                 <child>
                   <object class="GtkFrame" id="frame1">
                     <property name="visible">True</property>
@@ -247,7 +248,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="orientation">vertical</property>
-                            <property name="spacing">2</property>
+                            <property name="spacing">5</property>
                             <child>
                               <object class="GtkEntry" id="entry_your_name">
                                 <property name="visible">True</property>
@@ -266,6 +267,7 @@
                               <object class="GtkLabel" id="label_your_name_help">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
+                                <property name="margin_top">3</property>
                                 <property name="label" translatable="yes">label</property>
                                 <property name="xalign">0</property>
                               </object>
@@ -283,6 +285,7 @@
                       <object class="GtkLabel" id="label_your_name">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="margin_bottom">7</property>
                         <property name="label" translatable="yes">&lt;b&gt;frame1&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
@@ -291,7 +294,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
-                    <property name="padding">4</property>
+                    <property name="padding">3</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
@@ -330,6 +333,7 @@
                               <object class="GtkLabel" id="label_username_help">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
+                                <property name="margin_top">3</property>
                                 <property name="label" translatable="yes">label</property>
                                 <property name="xalign">0</property>
                               </object>
@@ -347,6 +351,7 @@
                       <object class="GtkLabel" id="label_username">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="margin_bottom">7</property>
                         <property name="label" translatable="yes">&lt;b&gt;frame2&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
@@ -355,7 +360,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
-                    <property name="padding">4</property>
+                    <property name="padding">3</property>
                     <property name="position">2</property>
                   </packing>
                 </child>
@@ -448,6 +453,7 @@
                               <object class="GtkLabel" id="label_pass_help">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
+                                <property name="margin_top">3</property>
                                 <property name="label" translatable="yes">label</property>
                                 <property name="xalign">0</property>
                               </object>
@@ -465,6 +471,7 @@
                       <object class="GtkLabel" id="label_choose_pass">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="margin_bottom">7</property>
                         <property name="label" translatable="yes">&lt;b&gt;frame3&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
@@ -473,7 +480,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
-                    <property name="padding">4</property>
+                    <property name="padding">3</property>
                     <property name="position">3</property>
                   </packing>
                 </child>
@@ -512,6 +519,7 @@
                               <object class="GtkLabel" id="label_hostname_help">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
+                                <property name="margin_top">3</property>
                                 <property name="label" translatable="yes">label</property>
                                 <property name="xalign">0</property>
                               </object>
@@ -529,6 +537,7 @@
                       <object class="GtkLabel" id="label_hostname">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="margin_bottom">7</property>
                         <property name="label" translatable="yes">&lt;b&gt;frame4&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
@@ -537,12 +546,14 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
+                    <property name="padding">3</property>
                     <property name="position">5</property>
                   </packing>
                 </child>
               </object>
               <packing>
                 <property name="position">2</property>
+                <property name="tab_fill">False</property>
               </packing>
             </child>
             <child type="tab">
@@ -745,7 +756,7 @@ Installation is recommended except for research purpose to verify the encryption
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
-                <property name="spacing">6</property>
+                <property name="spacing">3</property>
                 <child>
                   <object class="GtkBox" id="hbox10">
                     <property name="visible">True</property>
@@ -785,7 +796,7 @@ Installation is recommended except for research purpose to verify the encryption
                   <object class="GtkBox" id="hbox7">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="spacing">3</property>
+                    <property name="spacing">6</property>
                     <child>
                       <object class="GtkScrolledWindow" id="scrolledwindow5">
                         <property name="visible">True</property>
@@ -953,7 +964,7 @@ Installation is recommended except for research purpose to verify the encryption
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
-                <property name="spacing">3</property>
+                <property name="spacing">15</property>
                 <child>
                   <object class="GtkBox" id="vbox16">
                     <property name="visible">True</property>
@@ -1009,32 +1020,46 @@ Installation is recommended except for research purpose to verify the encryption
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
-                <property name="spacing">6</property>
+                <property name="spacing">15</property>
                 <child>
-                  <object class="GtkEventBox" id="event_timezones">
+                  <object class="GtkScrolledWindow" id="scrolled_timezones">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="shadow_type">in</property>
+                    <property name="min_content_height">360</property>
                     <child>
-                      <object class="GtkFixed" id="fixed_timezones">
+                      <object class="GtkViewport">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <child>
-                          <object class="GtkImage" id="image_timezones">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="stock">gtk-missing-image</property>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkEventBox" id="eventbox_time">
+                          <object class="GtkEventBox" id="event_timezones">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
-                              <object class="GtkLabel" id="label_time">
+                              <object class="GtkFixed" id="fixed_timezones">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">label</property>
-                                <property name="use_markup">True</property>
+                                <child>
+                                  <object class="GtkImage" id="image_timezones">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="stock">gtk-missing-image</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkEventBox" id="eventbox_time">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <child>
+                                      <object class="GtkLabel" id="label_time">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">label</property>
+                                        <property name="use_markup">True</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -1043,7 +1068,7 @@ Installation is recommended except for research purpose to verify the encryption
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
                   </packing>

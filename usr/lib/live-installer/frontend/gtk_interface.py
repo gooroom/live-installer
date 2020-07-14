@@ -162,6 +162,7 @@ class InstallerWindow:
         self.build_lang_list()
 
         # build timezones
+        self.map_scrollable()
         model = timezones.build_timezones(self)
         self.builder.get_object("button_timezones").set_label(_('Select timezone'))
         self.builder.get_object("event_timezones").connect('button-release-event', timezones.cb_map_clicked, model)
@@ -608,6 +609,24 @@ class InstallerWindow:
             path = model.get_path(set_iter)
             treeview.set_cursor(path)
             treeview.scroll_to_cell(path)
+    
+    def map_scrollable(self):
+        window = Gtk.Window()
+        screen = window.get_screen()
+        screen_width = screen.width()
+        screen_height = screen.height()
+
+        scrolled_window = self.builder.get_object("scrolled_timezones")
+
+        if screen_height <= 600:
+            scrolled_window.set_min_content_height(360)
+        else:
+            scrolled_window.set_min_content_height(410)
+
+        if screen_width <= 800:
+            scrolled_window.set_min_content_width(450)
+        else:
+            scrolled_window.set_min_content_width(800)
 
     def build_kb_lists(self):
         ''' Do some xml kung-fu and load the keyboard stuffs '''
