@@ -44,7 +44,6 @@
           <object class="GtkEventBox" id="title_eventbox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="border_width">8</property>
             <child>
               <object class="GtkBox" id="hbox5">
                 <property name="visible">True</property>
@@ -325,7 +324,7 @@
                 <property name="can_focus">False</property>
                 <property name="border_width">0</property>
                 <property name="orientation">vertical</property>
-                <property name="spacing">15</property>
+                <property name="spacing">12</property>
                 <property name="baseline_position">top</property>
                 <child>
                   <object class="GtkFrame" id="frame1">
@@ -1048,7 +1047,7 @@ Installation is recommended except for research purpose to verify the encryption
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
-                <property name="spacing">3</property>
+                <property name="spacing">15</property>
                 <child>
                   <object class="GtkBox" id="vbox16">
                     <property name="visible">True</property>
@@ -1106,30 +1105,44 @@ Installation is recommended except for research purpose to verify the encryption
                 <property name="orientation">vertical</property>
                 <property name="spacing">15</property>
                 <child>
-                  <object class="GtkEventBox" id="event_timezones">
+                  <object class="GtkScrolledWindow" id="scrolled_timezones">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="shadow_type">in</property>
+                    <property name="min_content_height">360</property>
                     <child>
-                      <object class="GtkFixed" id="fixed_timezones">
+                      <object class="GtkViewport">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <child>
-                          <object class="GtkImage" id="image_timezones">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="stock">gtk-missing-image</property>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkEventBox" id="eventbox_time">
+                          <object class="GtkEventBox" id="event_timezones">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
-                              <object class="GtkLabel" id="label_time">
+                              <object class="GtkFixed" id="fixed_timezones">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">label</property>
-                                <property name="use_markup">True</property>
+                                <child>
+                                  <object class="GtkImage" id="image_timezones">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="stock">gtk-missing-image</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkEventBox" id="eventbox_time">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <child>
+                                      <object class="GtkLabel" id="label_time">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">label</property>
+                                        <property name="use_markup">True</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -1138,7 +1151,7 @@ Installation is recommended except for research purpose to verify the encryption
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
                   </packing>
@@ -1682,7 +1695,7 @@ Installation is recommended except for research purpose to verify the encryption
                     <property name="valign">center</property>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
                   </packing>

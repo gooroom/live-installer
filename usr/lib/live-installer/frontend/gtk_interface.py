@@ -149,11 +149,14 @@ class InstallerWindow:
 
         pic_box.pack_start(self.face_button, True, False, 6)
         '''
+        #Initiate the window size
+        h_size = self.map_scrollable()
+
         # Initiate the welcome page
         pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
                 filename = WELCOME_GOOROOM,
-                width = 770,
-                height = -1,
+                width = -1,
+                height = h_size,
                 preserve_aspect_ratio=True)
 
         self.builder.get_object("image_welcome").set_from_pixbuf(pixbuf)
@@ -654,6 +657,28 @@ class InstallerWindow:
         renderer_text = Gtk.CellRendererText()
         combobox.pack_start(renderer_text,True)
         combobox.add_attribute(renderer_text, "text", 0)
+
+    def map_scrollable(self):
+        window = Gtk.Window()
+        screen = window.get_screen()
+        screen_width = screen.width()
+        screen_height = screen.height()
+
+        scrolled_window = self.builder.get_object("scrolled_timezones")
+
+        if screen_height <= 600:
+            scrolled_window.set_min_content_height(360)
+            h_size = 360
+        else:
+            scrolled_window.set_min_content_height(410)
+            h_size = 410
+
+        if screen_width <= 800:
+            scrolled_window.set_min_content_width(450)
+        else:
+            scrolled_window.set_min_content_width(800)
+
+        return h_size
 
 
     def build_kb_lists(self):
