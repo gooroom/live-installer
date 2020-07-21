@@ -407,15 +407,20 @@ class InstallerWindow:
         self.builder.get_object("button_ok").set_label(_("OK"))
         self.builder.get_object("button_quit").set_label(_("Quit"))
         self.builder.get_object("button_back").set_label(_("Back"))
-        self.builder.get_object("button_next").set_label(_("Forward"))
+        self.builder.get_object("button_next").set_label(_("Next"))
 
         self.builder.get_object("button_edit").set_label(_("Edit partitions"))
         self.builder.get_object("button_refresh").set_label(_("Refresh"))
         #self.builder.get_object("button_custommount").set_label(_("Expert mode"))
+        self.label_your_name_help = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your full name.")
+        self.label_your_name_help2 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("You cannot use 'root' as your full name.")
+        self.label_your_name_help3 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Your full name must not be more than 32 characters.")
         self.builder.get_object("label_your_name").set_markup("<b>%s</b>" % _("Your full name"))
         self.builder.get_object("label_your_name_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your full name."))
         self.label_username_help = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This is the name you will use to log in to your computer.")
-        self.label_username_help2 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It's recommended more than 1 letters which starts with lowcase alphabet and combined of lowcase alphabets, numbers and special character(-).")
+        self.label_username_help2 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It's recommended at least 1 to 32 letters which starts with lowcase alphabet and combined of lowcase alphabets, numbers and special character(-).")
+        self.label_username_help3 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("You cannot use 'root' as user name.")
+        self.label_username_help4 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("User name must not be more than 32 characters.")
         self.builder.get_object("label_username").set_markup("<b>%s</b>" % _("Your username"))
         self.builder.get_object("label_username_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This is the name you will use to log in to your computer."))
         self.builder.get_object("label_choose_pass").set_markup("<b>%s</b>" % _("Your password"))
@@ -496,12 +501,25 @@ class InstallerWindow:
             self.builder.get_object("entry_username").set_text(text)
         except:
             pass
+
+        if (self.setup.real_name == 'root'):
+            self.builder.get_object("label_your_name_help").set_markup(self.     label_your_name_help2)
+        elif (len(self.setup.real_name) > 32):
+            self.builder.get_object("label_your_name_help").set_markup(self.     label_your_name_help3)
+        else:
+            self.builder.get_object("label_your_name_help").set_markup(self.     label_your_name_help)
+
+
         self.setup.print_setup()
 
     def assign_username(self, entry, prop):
         self.setup.username = entry.props.text
         if not re.match(r'^[a-z][-a-z0-9]*$', self.setup.username):
             self.builder.get_object("label_username_help").set_markup(self.label_username_help2)
+        elif (self.setup.username == 'root'):
+            self.builder.get_object("label_username_help").set_markup(self.label_username_help3)
+        elif (len(self.setup.username) > 32):
+            self.builder.get_object("label_username_help").set_markup(self.label_username_help4)
         else:
             self.builder.get_object("label_username_help").set_markup(self.label_username_help)
         self.setup.print_setup()
@@ -927,10 +945,22 @@ class InstallerWindow:
                 if(self.setup.real_name is None or self.setup.real_name == ""):
                     errorFound = True
                     errorMessage = _("Please provide your full name.")
+                elif(self.setup.real_name == 'root'):
+                    errorFound = True
+                    errorMessage = _("Your full name is invalid.")
+                elif(len(self.setup.real_name) > 32):
+                    errorFound = True
+                    errorMessage = _("Your full name is invalid.")
                 elif(self.setup.username is None or self.setup.username == ""):
                     errorFound = True
                     errorMessage = _("Please provide a username.")
                 elif not re.match(r'^[a-z][-a-z0-9]*$', self.setup.username):
+                    errorFound = True
+                    errorMessage = _("UserId is invalid.")
+                elif (self.setup.username == 'root'):
+                    errorFound = True
+                    errorMessage = _("UserId is invalid.")
+                elif (len(self.setup.username)> 32):
                     errorFound = True
                     errorMessage = _("UserId is invalid.")
                 elif(self.setup.password1 is None or self.setup.password1 == ""):
@@ -1038,7 +1068,7 @@ class InstallerWindow:
         else:
             self.builder.get_object("button_back").set_sensitive(True)
             if(sel == self.PAGE_OVERVIEW):
-                self.builder.get_object("button_next").set_label(_("Forward"))
+                self.builder.get_object("button_next").set_label(_("Next"))
                 self.activate_page(self.PAGE_ADVANCED)
             elif(sel == self.PAGE_ADVANCED):
                 if (self.setup.skip_mount):
