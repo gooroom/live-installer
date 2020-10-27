@@ -1,17 +1,19 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import subprocess
 import sys
 
-from PyQt4.QtCore import Qt, QRectF
-from PyQt4.QtGui import QWidget, QFont, QPainter, QPen, QPainterPath, QColor, QPixmap
+from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtGui import QFont, QPainter, QPen, QPainterPath, QColor, QPixmap
+from PyQt5.QtWidgets import QWidget
 
 #U+ , or +U+ ... to string
 def fromUnicodeString(raw):
     if raw[0:2] == "U+":
-        return unichr(int(raw[2:], 16))
+        return chr(int(raw[2:], 16))
     elif raw[0:2] == "+U":
-        return unichr(int(raw[3:], 16))
+        return chr(int(raw[3:], 16))
 
     return ""
 
@@ -85,7 +87,7 @@ class Keyboard(QWidget):
         self.usable_width = self.width()-6
         self.key_w = (self.usable_width - 14 * self.space)/15
 
-        self.setMaximumHeight(self.key_w*4 + self.space*5)
+        self.setMaximumHeight(int(self.key_w*4) + int(self.space*5))
 
     def paintEvent(self, pe):
         p = QPainter(self)
@@ -234,7 +236,8 @@ class Keyboard(QWidget):
         cmd="ckbcomp -model pc106 -layout %s %s -compact" % (self.layout, variantParam)
         #print cmd
 
-        pipe = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=None)
+        pipe = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                stderr=None, universal_newlines=True)
         cfile = pipe.communicate()[0]
 
         #clear the current codes
@@ -261,7 +264,7 @@ class Keyboard(QWidget):
 
 ## testing
 if __name__ == "__main__":
-    from PyQt4.QtGui import QApplication, QVBoxLayout
+    from PyQt5.QtWidgets import QApplication, QWidget
 
     app = QApplication(sys.argv)
 
@@ -273,7 +276,5 @@ if __name__ == "__main__":
     kb1.setLayout(layout)
     kb1.setVariant(variant)
 
-    snapshot = QPixmap.grabWidget(kb1)
-    #snapshot = snapshot.scaled(600, 200, Qt.IgnoreAspectRatio, Qt.FastTransformation)
+    snapshot = kb1.grab()
     snapshot.save(filename, "PNG")
-

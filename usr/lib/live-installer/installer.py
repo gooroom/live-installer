@@ -4,9 +4,9 @@ import subprocess
 import time
 import shutil
 import gettext
-import commands
 import sys
 import parted
+import io
 
 gettext.install("live-installer", "/usr/share/gooroom/locale")
 
@@ -45,7 +45,10 @@ class InstallerEngine:
         self.media = config.get('live_media_source', '/run/live/medium/live/filesystem.squashfs')
         self.media_type = config.get('live_media_type', 'squashfs')
         # Flush print when it's called
-        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+        try:
+            sys.stdout = io.TextIOWrapper(open(sys.stdout.fileno(), 'wb', 0), write_through=True)
+        except TypeError:
+            sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
     def set_progress_hook(self, progresshook):
         ''' Set a callback to be called on progress updates '''
@@ -85,7 +88,7 @@ class InstallerEngine:
                         cmd = "mkfs.%s %s" % (partition.format_as, partition.path) # works with bfs, minix, msdos, ntfs, vfat
 
                 self.do_unmount(partition.partition.path)
-                print "EXECUTING: '%s'" % cmd
+                print("EXECUTING: '%s'" % cmd)
                 self.exec_cmd(cmd)
                 partition.type = partition.format_as
 
@@ -94,31 +97,32 @@ class InstallerEngine:
             #
             def init_label(label_name):
                 cmd = "blkid | grep %s | awk -F':' '{print $1}'"% (label_name)
-                p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT, universal_newlines=True)
                 for output in p.stdout.readlines():
-                    print "tune2fs -L '' %s" % output
+                    print("tune2fs -L '' %s" % output)
                     os.system("tune2fs -L '' %s" % output)
 
             if(partition.mount_as == "/"):
-                print "==== DEBUG ==== Assign GRM_ROOT_VOL label to the %s partition" % (partition.partition.path)
+                print("==== DEBUG ==== Assign GRM_ROOT_VOL label to the %s partition" % (partition.partition.path))
                 init_label("GRM_ROOT_VOL")
                 os.system("tune2fs -L GRM_ROOT_VOL " + partition.partition.path)
 
             if(partition.mount_as == "/recovery"):
-                print "==== DEBUG ==== Assign GRM_RECOVERY label to the %s partition" % (partition.partition.path)
+                print("==== DEBUG ==== Assign GRM_RECOVERY label to the %s partition" % (partition.partition.path))
                 init_label("GRM_RECOVERY")
                 os.system("tune2fs -L GRM_RECOVERY " + partition.partition.path)
 
             if(partition.mount_as == "/boot/efi"):
-                print "==== DEBUG ==== Assign GRM_BOOTEFI label to the %s partition" % (partition.partition.path)
+                print("==== DEBUG ==== Assign GRM_BOOTEFI label to the %s partition" % (partition.partition.path))
                 init_label("GRM_BOOTEFI")
                 os.system("fatlabel %s GRM_BOOTEFI" % partition.partition.path)
 
     def step_mount_source(self, setup):
         # Mount the installation media
-        print " --> Mounting partitions"
+        print(" --> Mounting partitions")
         self.update_progress(2, 4, False, False, _("Mounting %(partition)s on %(mountpoint)s") % {'partition':self.media, 'mountpoint':"/source/"})
-        print " ------ Mounting %s on %s" % (self.media, "/source/")
+        print(" ------ Mounting %s on %s" % (self.media, "/source/"))
         self.do_mount(self.media, "/source/", self.media_type, options="loop")
 
     def step_mount_partitions(self, setup):
@@ -129,7 +133,7 @@ class InstallerEngine:
             if(partition.mount_as is not None and partition.mount_as != ""):
                   if partition.mount_as == "/":
                         self.update_progress(3, 4, False, False, _("Mounting %(partition)s on %(mountpoint)s") % {'partition':partition.path, 'mountpoint':"/target/"})
-                        print " ------ Mounting partition %s on %s" % (partition.path, "/target/")
+                        print(" ------ Mounting partition %s on %s" % (partition.path, "/target/"))
                         if partition.type == "fat32":
                             fs = "vfat"
                         else:
@@ -140,7 +144,7 @@ class InstallerEngine:
         # Mount the other partitions
         for partition in setup.partitions:
             if(partition.mount_as is not None and partition.mount_as != "" and partition.mount_as != "/" and partition.mount_as != "swap"):
-                print " ------ Mounting %s on %s" % (partition.path, "/target" + partition.mount_as)
+                print(" ------ Mounting %s on %s" % (partition.path, "/target" + partition.mount_as))
                 os.system("mkdir -p /target" + partition.mount_as)
                 if partition.type == "fat16" or partition.type == "fat32":
                     fs = "vfat"
@@ -150,7 +154,7 @@ class InstallerEngine:
 
     def init_install(self, setup):
         # mount the media location.
-        print " --> Installation started"
+        print(" --> Installation started")
         if(not os.path.exists("/target")):
             if (setup.skip_mount):
                 self.error_message(message=_("ERROR: You must first manually mount your target filesystem(s) at /target to do a custom install!"))
@@ -160,7 +164,7 @@ class InstallerEngine:
             os.mkdir("/source")
         # find the squashfs..
         if(not os.path.exists(self.media)):
-            print "Base filesystem does not exist! Critical error (exiting)."
+            print("Base filesystem does not exist! Critical error (exiting).")
             self.error_message(message=_("ERROR: Something is wrong with the installation medium! This is usually caused by burning tools which are not compatible with LMDE (YUMI or other multiboot tools). Please burn the ISO image to DVD/USB using a different tool."))
             return
 
@@ -185,13 +189,13 @@ class InstallerEngine:
         EXCLUDE_DIRS = "home/* dev/* proc/* sys/* tmp/* run/* mnt/* media/* lost+found source target".split()
         our_current = 0
         # (Valid) assumption: num-of-files-to-copy ~= num-of-used-inodes-on-/
-        our_total = int(commands.getoutput("df --inodes /{src} | awk 'END{{ print $3 }}'".format(src=SOURCE.strip('/'))))
-        print " --> Copying {} files".format(our_total)
+        our_total = int(subprocess.check_output("df --inodes /{src} | awk 'END{{ print $3 }}'".format(src=SOURCE.strip('/')), shell=True, universal_newlines=True))
+        print(" --> Copying {} files".format(our_total))
         rsync_filter = ' '.join('--exclude=' + SOURCE + d for d in EXCLUDE_DIRS)
         rsync = subprocess.Popen("rsync --verbose --archive --no-D --acls "
                                  "--hard-links --xattrs {rsync_filter} "
                                  "{src}* {dst}".format(src=SOURCE, dst=DEST, rsync_filter=rsync_filter),
-                                 shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                 shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
         while rsync.poll() is None:
             line = rsync.stdout.readline()
             if not line:  # still copying the previous file, just wait
@@ -199,13 +203,13 @@ class InstallerEngine:
             else:
                 our_current = min(our_current + 1, our_total)
                 self.update_progress(our_current, our_total, False, False, _("Copying %s") % line.rstrip())
-        print "rsync exited with returncode: " + str(rsync.poll())
+        print("rsync exited with returncode: " + str(rsync.poll()))
 
         # Steps:
         our_total = 11
         our_current = 0
         # chroot
-        print " --> Chrooting"
+        print(" --> Chrooting")
         self.update_progress(our_current, our_total, False, False, _("Entering the system ..."))
         os.system("mount --bind /dev/ /target/dev/")
         os.system("mount --bind /dev/shm /target/dev/shm")
@@ -215,7 +219,7 @@ class InstallerEngine:
         os.system("mv /target/etc/resolv.conf /target/etc/resolv.conf.bk")
         os.system("cp -f /etc/resolv.conf /target/etc/resolv.conf")
 
-        kernelversion= commands.getoutput("uname -r")
+        kernelversion= subprocess.check_output("uname -r", shell=True, universal_newlines=True)
         os.system("cp /run/live/medium/live/vmlinuz /target/boot/vmlinuz-%s" % kernelversion)
         found_initrd = False
         for initrd in ["/run/live/medium/live/initrd.img", "/run/live/medium/live/initrd.lz"]:
@@ -225,10 +229,10 @@ class InstallerEngine:
                 break
 
         if not found_initrd:
-            print "WARNING: No initrd found!!"
+            print("WARNING: No initrd found!!")
 
         if (setup.gptonefi):
-            print " --> Installing EFI packages and Adding EFI entry"
+            print(" --> Installing EFI packages and Adding EFI entry")
             os.system("mkdir -p /target/boot/efi/EFI/debian")
             os.system("cp /run/live/medium/EFI/boot/grubx64.efi /target/boot/efi/EFI/debian")
             os.system("mkdir -p /target/debs")
@@ -264,7 +268,7 @@ class InstallerEngine:
         # self.do_run_in_chroot("apt-cdrom -o Acquire::cdrom::AutoDetect=false -m add")
 
         # remove live-packages (or w/e)
-        print " --> Removing live packages"
+        print(" --> Removing live packages")
         our_current += 1
         self.update_progress(our_current, our_total, False, False, _("Removing live configuration (packages)"))
         with open("/run/live/medium/live/filesystem.packages-remove", "r") as fd:
@@ -276,13 +280,13 @@ class InstallerEngine:
         self.do_run_in_chroot("rm -rf /run/live")
 
         # add new user
-        print " --> Adding new user"
+        print(" --> Adding new user")
         our_current += 1
         self.update_progress(our_total, our_current, False, False, _("Adding new user to the system"))
 
         # encrypt home
         if setup.ecryptfs:
-            print " --> Setup ecryptfs"
+            print(" --> Setup ecryptfs")
             # ecryptfs-utils
             if os.path.exists('/target/sbin/mount.ecryptfs'):
                 self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" --encrypt-home {username}'.format(real_name=setup.real_name.replace('"', r'\"'), username=setup.username))
@@ -290,7 +294,7 @@ class InstallerEngine:
                 self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" {username}'.format(real_name=setup.real_name.replace('"', r'\"'), username=setup.username))
 
         if setup.encfs:
-            print " --> Setup encfs"
+            print(" --> Setup encfs")
             # install encfs libtinyxml2-4 libpam-encfs libck-connector0 libpam-ck-connector
             os.system("mkdir -p /target/debs")
             os.system("cp /run/live/medium/pool/main/e/encfs/*.deb /target/debs/")
@@ -312,7 +316,7 @@ class InstallerEngine:
                 # mount /home/.encfs/{user}
                 self.do_run_in_chroot('echo -e \"p\\n{password}\" | encfs -v --stdinpass /home/.encfs/{user} /home/{user}'.format(password=setup.password1, user=setup.username))
                 time.sleep(5)
-                print " --> cp -ap /target/home/%s.bak/.[a-z]* /target/home/%s/" % (setup.username, setup.username)
+                print(" --> cp -ap /target/home/%s.bak/.[a-z]* /target/home/%s/" % (setup.username, setup.username))
                 os.system("cp -ap /target/home/%s.bak/.[a-z]* /target/home/%s/" % (setup.username, setup.username))
                 self.do_run_in_chroot('chown {user}:{user} /home/.encfs/{user}/.encfs6.xml'.format(user=setup.username))
 
@@ -322,9 +326,9 @@ class InstallerEngine:
                 self.do_run_in_chroot("chmod 4750 /bin/fusermount")
 
                 # umount
-                print " --> fusermount -u /target/home/%s" % setup.username
+                print(" --> fusermount -u /target/home/%s" % setup.username)
                 os.system("fusermount -u /target/home/%s" % setup.username)
-                print " --> rm -rf /target/home/%s.bak" % setup.username
+                print(" --> rm -rf /target/home/%s.bak" % setup.username)
                 os.system("rm -rf /target/home/%s.bak" % setup.username)
 
             else:
@@ -361,7 +365,7 @@ class InstallerEngine:
             self.do_run_in_chroot(r"sed -i -r -e 's/^#?(default_user)\s.*/\1  {user}/' -e 's/^#?(auto_login)\s.*/\1  yes/' /etc/slim.conf".format(user=setup.username))
 
         # write the /etc/fstab
-        print " --> Writing fstab"
+        print(" --> Writing fstab")
         our_current += 1
         self.update_progress(our_current, our_total, False, False, _("Writing filesystem mount information to /etc/fstab"))
         # make sure fstab has default /proc and /sys entries
@@ -376,7 +380,7 @@ class InstallerEngine:
             for partition in setup.partitions:
                 if (partition.mount_as is not None and partition.mount_as != "" and partition.mount_as != "None"):
                     partition_uuid = partition.path # If we can't find the UUID we use the path
-                    blkid = commands.getoutput('blkid').split('\n')
+                    blkid = subprocess.check_output('blkid', shell=True, universal_newlines=True).split('\n')
                     for blkid_line in blkid:
                         blkid_elements = blkid_line.split(':')
                         if blkid_elements[0] == partition.path:
@@ -417,28 +421,28 @@ class InstallerEngine:
 
         for partition in setup.partitions:
             if(partition.mount_as == "/"):
-                print "==== DEBUG ==== Assign archive_root_partition to the %s partition" % (partition.partition.path)
+                print("==== DEBUG ==== Assign archive_root_partition to the %s partition" % (partition.partition.path))
                 archive_root_partition = partition.partition.path
 
             if(partition.mount_as == "/boot/efi"):
-                print "==== DEBUG ==== Assign archive_boot_partition to the %s partition" % (partition.partition.path)
+                print("==== DEBUG ==== Assign archive_boot_partition to the %s partition" % (partition.partition.path))
                 archive_bootefi_partition = partition.partition.path
 
             if(partition.mount_as == "/recovery"):
-                print "==== DEBUG ==== Assign archive_recovery_partition to the %s partition" % (partition.partition.path)
+                print("==== DEBUG ==== Assign archive_recovery_partition to the %s partition" % (partition.partition.path))
                 archive_recovery_partition = partition.partition.path
 
-                print " --> Supporting Gooroom RECOVERY Mode"
+                print(" --> Supporting Gooroom RECOVERY Mode")
                 self.update_progress(our_current, our_total, False, False, _("Configuring Recovery Mode"))
 
                 self.do_mount(archive_recovery_partition, "/target", "ext4", None)
             #os.system("mount %s /target/recovery" % archive_recovery_partition)
 
-                print "fsarchiver savefs /target/gooroom_root_partition.fsa %s" % (archive_root_partition)
+                print("fsarchiver savefs /target/gooroom_root_partition.fsa %s" % (archive_root_partition))
                 os.system("fsarchiver savefs /target/gooroom_root_partition.fsa %s" % archive_root_partition)
 
                 if archive_bootefi_partition is not None:
-                    print "fsarchiver savefs /target/gooroom_bootefi_partition.fsa %s" % (archive_bootefi_partition)
+                    print("fsarchiver savefs /target/gooroom_bootefi_partition.fsa %s" % (archive_bootefi_partition))
                     os.system("fsarchiver savefs /target/gooroom_bootefi_partition.fsa %s" % archive_bootefi_partition)
 
                 os.system("umount --force %s" % archive_recovery_partition)
@@ -449,7 +453,7 @@ class InstallerEngine:
         our_current = 5
 
         # write host+hostname infos
-        print " --> Writing hostname"
+        print(" --> Writing hostname")
         our_current += 1
         self.update_progress(our_current, our_total, False, False, _("Setting hostname"))
         hostnamefh = open("/target/etc/hostname", "w")
@@ -468,7 +472,7 @@ class InstallerEngine:
         hostsfh.close()
 
         # set the locale
-        print " --> Setting the locale"
+        print(" --> Setting the locale")
         our_current += 1
         self.update_progress(our_current, our_total, False, False, _("Setting locale"))
         os.system("echo \"%s.UTF-8 UTF-8\" >> /target/etc/locale.gen" % setup.language)
@@ -478,7 +482,7 @@ class InstallerEngine:
         self.do_run_in_chroot("update-locale LANG=%s.UTF-8" % setup.language)
 
         # set the timezone
-        print " --> Setting the timezone"
+        print(" --> Setting the timezone")
         os.system("echo \"%s\" > /target/etc/timezone" % setup.timezone)
         os.system("rm -f /target/etc/localtime")
         os.system("ln -s /usr/share/zoneinfo/%s /target/etc/localtime" % setup.timezone)
@@ -493,12 +497,12 @@ class InstallerEngine:
             self.do_run_firmware_atheros("NT340XAA")
 
         # generate the iso info
-        print " --> Generating /target/etc/gooroom/.isoinfo"
+        print(" --> Generating /target/etc/gooroom/.isoinfo")
         os.system("echo \"#\n# DO NOT EDIT THIS FILE\n# It is automatically generated by live-installer\n#\" > /target/etc/gooroom/.isoinfo")
         os.system("cat /lib/live/mount/medium/.disk/info >> /target/etc/gooroom/.isoinfo")
 
         # set the keyboard options..
-        print " --> Setting the keyboard"
+        print(" --> Setting the keyboard")
         our_current += 1
         self.update_progress(our_current, our_total, False, False, _("Setting keyboard options"))
         consolefh = open("/target/etc/default/console-setup", "r")
@@ -542,11 +546,11 @@ class InstallerEngine:
             self.do_run_in_chroot("/usr/lib/gooroom/gooroomSystem/gooroom-adjust.py")
 
         # write MBR (grub)
-        print " --> Configuring Grub"
+        print(" --> Configuring Grub")
         our_current += 1
         if(setup.grub_device is not None):
             self.update_progress(our_current, our_total, False, False, _("Installing bootloader"))
-            print " --> Running grub-install"
+            print(" --> Running grub-install")
             self.do_run_in_chroot("grub-install --force %s --recheck" % setup.grub_device)
             #fix not add windows grub entry
             self.do_run_in_chroot("update-grub")
@@ -562,7 +566,7 @@ class InstallerEngine:
         # Recovery Mode : Install packages
         for partition in setup.partitions:
             if(partition.mount_as == "/recovery"):
-                print " --> Configuring Recovery Mode"
+                print(" --> Configuring Recovery Mode")
                 os.system("mkdir -p /target/debs")
 
                 # UEFI boot
@@ -594,17 +598,17 @@ class InstallerEngine:
 
         # IMA Mode
         if os.path.exists("/run/live/medium/pool/main/g/gooroom-exe-protector"):
-            print " --> IMA : installing gooroom-exe-protector"
+            print(" --> IMA : installing gooroom-exe-protector")
             os.system("mkdir -p /target/debs")
             os.system("cp /run/live/medium/pool/main/g/gooroom-exe-protector/*.deb /target/debs/")
             self.do_run_in_chroot("dpkg -i /debs/*.deb")
             os.system("rm -rf /target/debs")
         else:
             # Recreate initramfs (needed in case of skip_mount also, to include things like mdadm/dm-crypt/etc in case its needed to boot a custom install)
-            print " --> Configuring Initramfs"
+            print(" --> Configuring Initramfs")
             our_current += 1
             self.do_run_in_chroot("/usr/sbin/update-initramfs -t -u -k all")
-            kernelversion= commands.getoutput("uname -r")
+            kernelversion= subprocess.check_output("uname -r", shell=True, universal_newlines=True)
             self.do_run_in_chroot("/usr/bin/sha1sum /boot/initrd.img-%s > /var/lib/initramfs-tools/%s" % (kernelversion,kernelversion))
 
         # Recovery Mode : Copy vmlinuz and initrd.img to recovery directory
@@ -615,7 +619,7 @@ class InstallerEngine:
                 os.system("cp -f /target/boot/initrd.img-* /target/recovery/boot")
 
         # Clean APT
-        print " --> Cleaning APT"
+        print(" --> Cleaning APT")
         our_current += 1
         self.update_progress(our_current, our_total, True, False, _("Cleaning APT"))
         os.system("chroot /target/ /bin/sh -c \"dpkg --configure -a\"")
@@ -623,7 +627,7 @@ class InstallerEngine:
         self.do_run_in_chroot("apt --yes autoremove")
 
         # now unmount it
-        print " --> Unmounting partitions"
+        print(" --> Unmounting partitions")
         os.system("umount --force /target/dev/shm")
         os.system("umount --force /target/dev/pts")
         if setup.gptonefi:
@@ -646,31 +650,31 @@ class InstallerEngine:
         self.do_archive_partition(our_total, our_current, setup)
 
         self.update_progress(0, 0, False, True, _("Installation finished"))
-        print " --> All done"
+        print(" --> All done")
 
     def do_run_firmware_atheros(self, device):
         try :
-            subprocess.check_output('dmidecode | grep -q %s' %device, shell=True)
+            subprocess.check_output('dmidecode | grep -q %s' %device, shell=True, universal_newlines=True)
         except subprocess.CalledProcessError as e:
             if e.returncode == 1:
-                print "Found %s" %device
+                print("Found %s" %device)
                 os.system("mkdir -p /target/debs")
                 os.system("cp /lib/live/mount/medium/pool/main/f/firmware-nonfree/firmware-atheros*.deb /target/debs/")
                 self.do_run_in_chroot("dpkg -i /debs/*")
             else:
-                print "Not found %s" %device
+                print("Not found %s" %device)
 
     def do_run_in_chroot(self, command):
         command = command.replace('"', "'").strip()
-        print "chroot /target/ /bin/sh -c \"%s\"" % command
+        print("chroot /target/ /bin/sh -c \"%s\"" % command)
         os.system("chroot /target/ /bin/sh -c \"%s\"" % command)
 
     def do_configure_grub(self, our_total, our_current):
         self.update_progress(our_current, our_total, True, False, _("Configuring bootloader"))
         #if not setup.gptonefi:
-        print " --> Running grub-mkconfig"
+        print(" --> Running grub-mkconfig")
         self.do_run_in_chroot("grub-mkconfig -o /boot/grub/grub.cfg")
-        grub_output = commands.getoutput("chroot /target/ /bin/sh -c \"grub-mkconfig -o /boot/grub/grub.cfg\"")
+        grub_output = subprocess.check_output("chroot /target/ /bin/sh -c \"grub-mkconfig -o /boot/grub/grub.cfg\"", shell=True, universal_newlines=True)
         grubfh = open("/var/log/live-installer-grub-output.log", "w")
         grubfh.writelines(grub_output)
         grubfh.close()
@@ -678,7 +682,7 @@ class InstallerEngine:
 
     def do_check_grub(self, our_total, our_current):
         self.update_progress(our_current, our_total, True, False, _("Checking bootloader"))
-        print " --> Checking Grub configuration"
+        print(" --> Checking Grub configuration")
         time.sleep(5)
         found_entry = False
         if os.path.exists("/target/boot/grub/grub.cfg"):
@@ -690,11 +694,11 @@ class InstallerEngine:
                 #    print " --> Found Grub theme: %s " % line
                 if ("menuentry" in line and ("class gooroom" in line or "Gooroom" in line or "Debian" in line)):
                     found_entry = True
-                    print " --> Found Grub entry: %s " % line
+                    print(" --> Found Grub entry: %s " % line)
             grubfh.close()
             return (found_entry)
         else:
-            print "!No /target/boot/grub/grub.cfg file found!"
+            print("!No /target/boot/grub/grub.cfg file found!")
             return False
 
     def do_mount(self, device, dest, type, options=None):
@@ -704,18 +708,18 @@ class InstallerEngine:
             cmd = "mount -o %s -t %s %s %s" % (options, type, device, dest)
         else:
             cmd = "mount -t %s %s %s" % (type, device, dest)
-        print "EXECUTING: '%s'" % cmd
+        print("EXECUTING: '%s'" % cmd)
         self.exec_cmd(cmd)
 
     def do_unmount(self, mountpoint):
         ''' Unmount a filesystem '''
         cmd = "umount %s" % mountpoint
-        print "EXECUTING: '%s'" % cmd
+        print("EXECUTING: '%s'" % cmd)
         self.exec_cmd(cmd)
 
     # Execute schell command and return output in a list
     def exec_cmd(self, cmd):
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
         lstOut = []
         for line in p.stdout.readlines():
             # Strip the line, also from null spaces (strip() only strips white spaces)
@@ -760,26 +764,26 @@ class Setup(object):
 
     def print_setup(self):
         if __debug__:
-            print "-------------------------------------------------------------------------"
-            print "language: %s" % self.language
-            print "timezone: %s" % self.timezone
-            print "keyboard: %s - %s (%s) - %s - %s (%s)" % (self.keyboard_model, self.keyboard_layout, self.keyboard_variant, self.keyboard_model_description, self.keyboard_layout_description, self.keyboard_variant_description)
-            print "user: %s (%s)" % (self.username, self.real_name)
-            print "autologin: ", self.autologin
-            print "hostname: %s " % self.hostname
-            print "passwords: %s - %s" % (self.password1, self.password2)
-            print "grub_device: %s " % self.grub_device
-            print "ecryptfs: %s " % self.ecryptfs
-            print "encfs: %s " % self.encfs
-            print "skip_mount: %s" % self.skip_mount
+            print("-------------------------------------------------------------------------")
+            print("language: %s" % self.language)
+            print("timezone: %s" % self.timezone)
+            print("keyboard: %s - %s (%s) - %s - %s (%s)" % (self.keyboard_model, self.keyboard_layout, self.keyboard_variant, self.keyboard_model_description, self.keyboard_layout_description, self.keyboard_variant_description))
+            print("user: %s (%s)" % (self.username, self.real_name))
+            print("autologin: ", self.autologin)
+            print("hostname: %s " % self.hostname)
+            print("passwords: %s - %s" % (self.password1, self.password2))
+            print("grub_device: %s " % self.grub_device)
+            print("ecryptfs: %s " % self.ecryptfs)
+            print("encfs: %s " % self.encfs)
+            print("skip_mount: %s" % self.skip_mount)
             if (not self.skip_mount):
-                print "target_disk: %s " % self.target_disk
+                print("target_disk: %s " % self.target_disk)
                 if self.gptonefi:
-                    print "GPT partition table: True"
+                    print("GPT partition table: True")
                 else:
-                    print "GPT partition table: False"
-                print "disks: %s " % self.disks
-                print "partitions:"
+                    print("GPT partition table: False")
+                print("disks: %s " % self.disks)
+                print("partitions:")
                 for partition in self.partitions:
                     partition.print_partition()
-            print "-------------------------------------------------------------------------"
+            print("-------------------------------------------------------------------------")

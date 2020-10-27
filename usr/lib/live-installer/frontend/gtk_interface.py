@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from installer import InstallerEngine, Setup, NON_LATIN_KB_LAYOUTS
 from slideshow import Slideshow
@@ -10,7 +10,7 @@ from widgets import PictureChooserButton
 import gettext
 import os
 import re
-import commands
+import subprocess
 import sys
 import PIL
 import threading
@@ -29,7 +29,7 @@ gettext.install("live-installer", "/usr/share/gooroom/locale")
 LOADING_ANIMATION = '/usr/share/live-installer/loading.gif'
 
 # Used as a decorator to run things in the background
-def async(func):
+async def func():
     def wrapper(*args, **kwargs):
         thread = threading.Thread(target=func, args=args, kwargs=kwargs)
         thread.daemon = True
@@ -93,8 +93,8 @@ class InstallerWindow:
          self.PAGE_INSTALL,
          self.PAGE_TIMEZONE,
          self.PAGE_CUSTOMWARNING,
-         self.PAGE_CUSTOMPAUSED) = range(10)
-        self.wizard_pages = range(10)
+         self.PAGE_CUSTOMPAUSED) = list(range(10))
+        self.wizard_pages = list(range(10))
         self.wizard_pages[self.PAGE_LANGUAGE] = WizardPage(_("Language"), "locales.png")
         self.wizard_pages[self.PAGE_TIMEZONE] = WizardPage(_("Timezone"), "time.png")
         self.wizard_pages[self.PAGE_KEYBOARD] = WizardPage(_("Keyboard layout"), "keyboard.png")
@@ -122,41 +122,6 @@ class InstallerWindow:
         self.builder.get_object("treeview_language_list").append_column(self.country_column)
 
         self.builder.get_object("treeview_language_list").connect("cursor-changed", self.assign_language)
-
-        '''
-        # build user info page
-        os.system("convert /usr/share/pixmaps/faces/7_penguin.png -resize x96 /tmp/live-installer-face.png")
-
-        pic_box = self.builder.get_object("hbox8")
-        self.face_button = PictureChooserButton(num_cols=4, button_picture_size=96, menu_pictures_size=64)
-        self.face_button.set_alignment(0.0, 0.5)
-        self.face_photo_menuitem = Gtk.MenuItem(_("Take a photo..."))
-        self.face_photo_menuitem.connect('activate', self._on_face_take_picture_button_clicked)
-        self.face_browse_menuitem = Gtk.MenuItem(_("Browse for more pictures..."))
-        self.face_browse_menuitem.connect('activate', self._on_face_browse_menuitem_activated)
-
-        face_dirs = ["/usr/share/pixmaps/faces"]
-        for face_dir in face_dirs:
-            if os.path.exists(face_dir):
-                pictures = sorted(os.listdir(face_dir))
-                for picture in pictures:
-                    path = os.path.join(face_dir, picture)
-                    self.face_button.add_picture(path, self._on_face_menuitem_activated)
-
-        self.face_button.add_separator()
-
-        # if no /dev/video*, we don't have a webcam
-        from glob import glob
-        webcam_detected = bool(len(glob('/dev/video*')))
-
-        if webcam_detected:
-            self.face_button.add_menuitem(self.face_photo_menuitem)
-        self.face_button.add_menuitem(self.face_browse_menuitem)
-
-        self.face_button.set_picture_from_file("/tmp/live-installer-face.png")
-
-        pic_box.pack_start(self.face_button, True, False, 6)
-        '''
 
         # build the language list
         self.build_lang_list()
@@ -258,7 +223,7 @@ class InstallerWindow:
         self.should_pulse = False
 
         # make sure we're on the right page (no pun.)
-        self.activate_page(0)
+        self.activate_page(self.PAGE_LANGUAGE)
 
         if(fullscreen):
             # dedicated installer mode thingum
@@ -284,15 +249,6 @@ class InstallerWindow:
         #self.partitions_browser.set_transparent(True)
         self.partitions_browser.set_background_color(Gdk.RGBA(0, 0, 0, 0))
         self.builder.get_object("scrolled_partitions").add(self.partitions_browser)
-
-        #to support 800x600 resolution
-        #self.window.set_geometry_hints(
-        #                            min_width=750, 
-        #                            min_height=500, 
-        #                            max_width=750, 
-        #                            max_height=500, 
-        #                            base_width=750, 
-        #                            base_height=500)
 
         self.window.show_all()
 
@@ -323,7 +279,7 @@ class InstallerWindow:
         dialog.add_filter(filter)
 
         preview = Gtk.Image()
-        dialog.set_preview_widget(preview);
+        dialog.set_preview_widget(preview)
         dialog.connect("update-preview", self.update_preview_cb, preview)
         dialog.set_use_preview_label(False)
 
@@ -356,7 +312,7 @@ class InstallerWindow:
     def _on_face_menuitem_activated(self, path):
         if os.path.exists(path):
             os.system("cp %s /tmp/live-installer-face.png" % path)
-            print path
+            print(path)
             return True
 
     def _on_face_take_picture_button_clicked(self, menuitem):
@@ -392,16 +348,14 @@ class InstallerWindow:
 
     def i18n(self):
 
-        """
         if __debug__:
             self.window.set_title((_("%s Installer") % self.installer.get_distribution_name()) + ' (debug)')
         else:
             self.window.set_title((_("%s Installer") % self.installer.get_distribution_name()))
-        """
 
         self.language_column.set_title(_("Language"))
         self.country_column.set_title(_("Country"))
-        self.activate_page(0)
+        self.activate_page(self.PAGE_LANGUAGE)
 
         self.builder.get_object("button_cancel").set_label(_("Cancel"))
         self.builder.get_object("button_ok").set_label(_("OK"))
@@ -427,19 +381,6 @@ class InstallerWindow:
         self.builder.get_object("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your password twice to ensure it is correct."))
         self.builder.get_object("label_hostname").set_markup("<b>%s</b>" % _("Hostname"))
         self.builder.get_object("label_hostname_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This hostname will be the computer's name on the network."))
-        '''
-        self.builder.get_object("label_autologin").set_markup("<b>%s</b>" % _("Automatic login"))
-        self.builder.get_object("label_autologin_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("If enabled, the login screen is skipped when the system starts, and you are signed into your desktop session automatically."))
-        self.builder.get_object("checkbutton_autologin").set_label(_("Log in automatically"))
-        self.builder.get_object("checkbutton_autologin").connect("toggled", self.assign_autologin)
-
-        self.builder.get_object("face_label").set_markup("<b>%s</b>" % _("Your picture"))
-        self.builder.get_object("face_description").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This picture represents your user account. It is used in the login screen and a few other places."))
-
-        self.face_button.set_tooltip_text(_("Click to change your picture"))
-        self.face_photo_menuitem.set_label(_("Take a photo..."))
-        self.face_browse_menuitem.set_label(_("Browse for more pictures..."))
-        '''
 
         # timezones
         self.builder.get_object("label_timezones").set_label(_("Selected timezone:"))
@@ -509,7 +450,6 @@ class InstallerWindow:
         else:
             self.builder.get_object("label_your_name_help").set_markup(self.     label_your_name_help)
 
-
         self.setup.print_setup()
 
     def assign_username(self, entry, prop):
@@ -542,7 +482,7 @@ class InstallerWindow:
 
         # Try to find out where we're located...
         try:
-            from urllib import urlopen
+            from urllib.request import urlopen
         except ImportError:  # py3
             from urllib.request import urlopen
         try:
@@ -562,7 +502,7 @@ class InstallerWindow:
         iso_standard = "3166"
         if os.path.exists("/usr/share/xml/iso-codes/iso_3166-1.xml"):
             iso_standard = "3166-1"
-        for line in commands.getoutput("isoquery --iso %s | cut -f1,4-" % iso_standard).split('\n'):
+        for line in subprocess.getoutput("isoquery --iso %s | cut -f1,4-" % iso_standard).split('\n'):
             ccode, cname = line.split(None, 1)
             countries[ccode] = cname
 
@@ -571,15 +511,15 @@ class InstallerWindow:
         iso_standard = "639"
         if os.path.exists("/usr/share/xml/iso-codes/iso_639-2.xml"):
             iso_standard = "639-2"
-        for line in commands.getoutput("isoquery --iso %s | cut -f3,4-" % iso_standard).split('\n'):
+        for line in subprocess.getoutput("isoquery --iso %s | cut -f3,4-" % iso_standard).split('\n'):
             cols = line.split(None, 1)
             if len(cols) > 1:
                 name = cols[1].replace(";", ",")
                 languages[cols[0]] = name
-        for line in commands.getoutput("isoquery --iso %s | cut -f1,4-" % iso_standard).split('\n'):
+        for line in subprocess.getoutput("isoquery --iso %s | cut -f1,4-" % iso_standard).split('\n'):
             cols = line.split(None, 1)
             if len(cols) > 1:
-                if cols[0] not in languages.keys():
+                if cols[0] not in list(languages.keys()):
                     name = cols[1].replace(";", ",")
                     languages[cols[0]] = name
 
@@ -589,7 +529,7 @@ class InstallerWindow:
         flag_path = lambda ccode: self.resource_dir + '/flags/16/' + ccode.lower() + '.png'
         from utils import memoize
         flag = memoize(lambda ccode: GdkPixbuf.Pixbuf.new_from_file(flag_path(ccode)))
-        for locale in commands.getoutput("awk -F'[@ .]' '/UTF-8/{ print $1 }' /usr/share/i18n/SUPPORTED | uniq").split('\n'):
+        for locale in subprocess.getoutput("awk -F'[@ .]' '/UTF-8/{ print $1 }' /usr/share/i18n/SUPPORTED | uniq").split('\n'):
             if '_' in locale:
                 lang, ccode = locale.split('_')
                 language = lang
@@ -650,7 +590,7 @@ class InstallerWindow:
         ''' Do some xml kung-fu and load the keyboard stuffs '''
         # Determine the layouts in use
         (keyboard_geom,
-         self.setup.keyboard_layout) = commands.getoutput("setxkbmap -query | awk '/^(model|layout)/{print $2}'").split()
+         self.setup.keyboard_layout) = subprocess.getoutput("setxkbmap -query | awk '/^(model|layout)/{print $2}'").split()
         # Build the models
         from collections import defaultdict
         def _ListStore_factory():
@@ -706,7 +646,7 @@ class InstallerWindow:
         ''' Called whenever someone updates the language '''
         model = treeview.get_model()
         selection = treeview.get_selection()
-        if selection.count_selected_rows > 0:
+        if selection.count_selected_rows:
             (model, iter) = selection.get_selected()
             if iter is not None:
                 self.setup.language = model.get_value(iter, 3)
@@ -816,8 +756,8 @@ class InstallerWindow:
         variant = self.setup.keyboard_variant.split(",")[-1]
         if variant == "":
             variant = None
-        print("python /usr/lib/live-installer/frontend/generate_keyboard_layout.py %s %s %s" % (layout, variant, filename))
-        os.system("python /usr/lib/live-installer/frontend/generate_keyboard_layout.py %s %s %s" % (layout, variant, filename))
+        print("python3 /usr/lib/live-installer/frontend/generate_keyboard_layout.py {} {} {}".format(layout, variant, filename))
+        os.system("python3 /usr/lib/live-installer/frontend/generate_keyboard_layout.py {} {} {}".format(layout, variant, filename))
         self.builder.get_object("image_keyboard").set_from_file(filename)
         return False
 
@@ -887,10 +827,20 @@ class InstallerWindow:
         # TODO: move other page-depended actions from the wizard_cb into here below
         if index == self.PAGE_LANGUAGE:
             self.builder.get_object("button_back").set_sensitive(False)
-        if index == self.PAGE_PARTITIONS:
+        elif index == self.PAGE_PARTITIONS:
             self.setup.skip_mount = False
-        if index == self.PAGE_CUSTOMWARNING:
+        elif index == self.PAGE_CUSTOMWARNING:
             self.setup.skip_mount = True
+        elif index ==  self.PAGE_INSTALL:
+            import threading
+            thr1 = threading.Thread(target=self.do_install)
+            thr1.daemon = True
+            thr1.start()
+
+            slideshow = Slideshow(self.slideshow_browser, self.slideshow_path)
+            thr2 = threading.Thread(target=slideshow.run)
+            thr2.daemon = True
+            thr2.start()
 
     def wizard_cb(self, widget, goback, data=None):
         ''' wizard buttons '''
@@ -1054,16 +1004,12 @@ class InstallerWindow:
                 self.builder.get_object("treeview_overview").expand_all()
                 self.builder.get_object("button_next").set_label(_("Install"))
             elif(sel == self.PAGE_OVERVIEW):
-                self.activate_page(self.PAGE_INSTALL)
                 self.builder.get_object("button_next").set_sensitive(False)
                 self.builder.get_object("button_back").set_sensitive(False)
-                self.builder.get_object("button_quit").set_sensitive(False)
-                self.do_install()
-                slideshow = Slideshow(self.slideshow_browser, self.slideshow_path)
-                slideshow.run()
-            elif(sel == self.PAGE_CUSTOMPAUSED):
                 self.activate_page(self.PAGE_INSTALL)
+            elif(sel == self.PAGE_CUSTOMPAUSED):
                 self.builder.get_object("button_next").hide()
+                self.activate_page(self.PAGE_INSTALL)
                 self.paused = False
         else:
             self.builder.get_object("button_back").set_sensitive(True)
@@ -1147,14 +1093,13 @@ class InstallerWindow:
         MessageDialog(_("Installation paused"), _("The installation is now paused. Please read the instructions on the page carefully before clicking Forward to finish the installation."))
         self.builder.get_object("button_next").set_sensitive(True)
 
-    @async
     def do_install(self):
-        print " ## INSTALLATION "
+        print(" ## INSTALLATION ")
         ''' Actually perform the installation .. '''
         inst = self.installer
 
         if __debug__:
-            print " ## DEBUG MODE - INSTALLATION PROCESS NOT LAUNCHED"
+            print(" ## DEBUG MODE - INSTALLATION PROCESS NOT LAUNCHED")
             time.sleep(200)
             Gtk.main_quit()
             sys.exit(0)
@@ -1170,8 +1115,8 @@ class InstallerWindow:
 
         try:
             inst.init_install(self.setup)
-        except Exception, detail1:
-            print detail1
+        except Exception as detail1:
+            print(detail1)
             do_try_finish_install = False
             self.show_error_dialog(_("Installation error"), str(detail1))
 
@@ -1188,8 +1133,8 @@ class InstallerWindow:
 
             try:
                 inst.finish_install(self.setup)
-            except Exception, detail1:
-                print detail1
+            except Exception as detail1:
+                print(detail1)
                 self.show_error_dialog(_("Installation error"), str(detail1))
 
             # show a message dialog thingum
@@ -1205,7 +1150,7 @@ class InstallerWindow:
             while(self.showing_last_dialog):
                 time.sleep(0.1)
 
-            print " ## INSTALLATION COMPLETE "
+            print(" ## INSTALLATION COMPLETE ")
 
         Gtk.main_quit()
         sys.exit(0)

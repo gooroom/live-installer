@@ -1,7 +1,7 @@
-#!/usr/bin/python -OO
+#!/usr/bin/python3 -OO
 
 import sys
-import commands
+import subprocess
 import gettext
 
 gettext.install("live-installer", "/usr/share/gooroom/locale")
@@ -15,7 +15,7 @@ from gi.repository import Gtk
 
 # main entry
 if __name__ == "__main__":
-	if("install" in commands.getoutput("cat /proc/cmdline")):
+	if("install" in subprocess.getoutput("cat /proc/cmdline")):
 		win = InstallerWindow(fullscreen=True)
 	else:
 		win = InstallerWindow(fullscreen=False)
