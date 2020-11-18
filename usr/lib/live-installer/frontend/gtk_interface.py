@@ -269,6 +269,7 @@ class InstallerWindow:
         self.slideshow_path = "/usr/share/live-installer/slideshow"
         if os.path.exists(self.slideshow_path):
             self.slideshow_browser = WebKit2.WebView()
+            self.slideshow_browser.connect('context_menu',self.disable_right_cb)
             s = self.slideshow_browser.get_settings()
             s.set_property('allow-file-access-from-file-urls', True)
             #s.set_property('enable-default-context-menu', False)
@@ -279,6 +280,7 @@ class InstallerWindow:
 
         self.partitions_browser = WebKit2.WebView()
         s = self.partitions_browser.get_settings()
+        self.partitions_browser.connect('context_menu', self.disable_right_cb)
         s.set_property('allow-file-access-from-file-urls', True)
         #s.set_property('enable-default-context-menu', False)
         #self.partitions_browser.set_transparent(True)
@@ -287,11 +289,11 @@ class InstallerWindow:
 
         #to support 800x600 resolution
         #self.window.set_geometry_hints(
-        #                            min_width=750, 
-        #                            min_height=500, 
-        #                            max_width=750, 
-        #                            max_height=500, 
-        #                            base_width=750, 
+        #                            min_width=750,
+        #                            min_height=500,
+        #                            max_width=750,
+        #                            max_height=500,
+        #                            base_width=750,
         #                            base_height=500)
 
         self.window.show_all()
@@ -1248,3 +1250,6 @@ class InstallerWindow:
             # asssume we're "pulsing" already
             self.should_pulse = True
             pbar_pulse()
+
+    def disable_right_cb(self,web_view, context_menu, event, hit_test_result):
+        context_menu.remove_all()
