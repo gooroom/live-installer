@@ -531,7 +531,7 @@ class InstallerWindow:
         self.setup.print_setup()
 
     def quit_cb(self, widget, data=None):
-        if QuestionDialog(_("Quit?"), _("Are you sure you want to quit the installer?")):
+        if QuestionDialog(_("Quit"), _("Are you sure you want to quit the installer?")):
             Gtk.main_quit()
             return False
         else:
