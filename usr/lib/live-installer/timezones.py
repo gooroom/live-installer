@@ -29,7 +29,7 @@ LIGHTS_IM = Image.open(TIMEZONE_RESOURCES + 'lights.png').crop((0,0,IM_X,IM_Y)).
 
 MAP_CENTER = (373, 263)  # pixel center of where equatorial line and 0th meridian cross on our bg map; WARNING: cc.png relies on this exactly!
 MAP_SIZE = BACK_IM.size  # size of the map image
-assert MAP_SIZE == (IM_X, IM_Y_ORG), 'MAP_CENTER (et al.?) calculations depend on this size'
+#assert MAP_SIZE == (IM_X, IM_Y_ORG), 'MAP_CENTER (et al.?) calculations depend on this size'
 
 def debug(func):
     '''Decorator to print function call details - parameters names and effective values'''

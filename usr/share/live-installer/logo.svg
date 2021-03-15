@@ -1,39 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="48" height="48" viewBox="0 0 48 48">
     <defs>
-        <path id="py8p7ci5ob" d="M0 0.013L5.475 0.013 5.475 4.849 0 4.849z"/>
-        <path id="adms7xyvyd" d="M0.017 0.029L4.965 0.029 4.965 3.12 0.017 3.12z"/>
-        <path id="llkmiu7d5f" d="M0.02 0.013L5.495 0.013 5.495 4.849 0.02 4.849z"/>
-        <linearGradient id="qmz8vbhr2a" x1="0%" x2="100%" y1="0%" y2="100%">
-            <stop offset="0%" stop-color="#D6D6D6"/>
-            <stop offset="99.372%" stop-color="#C4C4C4"/>
+        <linearGradient id="dglzp89j0a" x1="0%" x2="99.372%" y1="0%" y2="99.372%">
+            <stop offset="0%" stop-color="#F4F4F4"/>
+            <stop offset="100%" stop-color="#C4C4C4"/>
         </linearGradient>
+        <path id="me9vey6kbb" d="M22 0C9.85 0 0 9.85 0 22s9.85 22 22 22 22-9.85 22-22S34.15 0 22 0zm0 2c11.046 0 20 8.954 20 20s-8.954 20-20 20S2 33.046 2 22 10.954 2 22 2z"/>
     </defs>
     <g fill="none" fill-rule="evenodd">
-        <rect width="48" height="48" fill="url(#qmz8vbhr2a)" rx="24"/>
-        <path fill="#164193" d="M25.347 30.009L31.2 24.156 33 25.956 24 34.956 15 25.956 16.8 24.156 22.391 29.747 22.391 14 25.347 14z"/>
         <g>
-            <g transform="translate(10 39) translate(0 .07)">
-                <mask id="o6jh8aut7c" fill="#fff">
-                    <use xlink:href="#py8p7ci5ob"/>
-                </mask>
-                <path fill="#164193" d="M5.475 2.537C4.138 1.864 2.862 1.023 1.68.013L0 1.98c1.344 1.148 2.793 2.104 4.313 2.869l1.162-2.312z" mask="url(#o6jh8aut7c)"/>
-            </g>
-            <path fill="#50B748" d="M9.643 4.121c-1.43-.336-2.83-.841-4.168-1.515L4.313 4.918c1.52.765 3.11 1.339 4.736 1.721l.594-2.518" transform="translate(10 39)"/>
-            <g transform="translate(10 39) translate(9.032 4.093)">
-                <mask id="au52ezznte" fill="#fff">
-                    <use xlink:href="#adms7xyvyd"/>
-                </mask>
-                <path fill="#009DDE" d="M4.965.533C3.503.533 2.04.365.61.03L.017 2.547c1.625.382 3.286.573 4.948.573V.533z" mask="url(#au52ezznte)"/>
-            </g>
-            <path fill="#804996" d="M18.35 4.121c-1.43.337-2.892.505-4.353.505v2.587c1.66 0 3.322-.191 4.948-.574l-.594-2.518" transform="translate(10 39)"/>
-            <path fill="#F29326" d="M22.518 2.606c-1.337.674-2.737 1.179-4.167 1.515l.594 2.518c1.625-.382 3.216-.956 4.736-1.721l-1.163-2.312z" transform="translate(10 39)"/>
-            <g transform="translate(10 39) translate(22.499 .07)">
-                <mask id="7kxrxr60pg" fill="#fff">
-                    <use xlink:href="#llkmiu7d5f"/>
-                </mask>
-                <path fill="#E20714" d="M3.815.013C2.633 1.023 1.357 1.864.02 2.537L1.182 4.85c1.52-.765 2.97-1.722 4.313-2.869L3.815.013" mask="url(#7kxrxr60pg)"/>
+            <g transform="translate(-1044 -1038) translate(1044 1038)">
+                <rect width="48" height="48" fill="url(#dglzp89j0a)" rx="24"/>
+                <path fill="#164193" d="M25.496 29.788L32 23.285 34 25.285 24 35.285 14 25.285 16 23.285 22.212 29.496 22.212 12 25.496 12z"/>
+                <g transform="translate(2 2)">
+                    <mask id="k88p5io8sc" fill="#fff">
+                        <use xlink:href="#me9vey6kbb"/>
+                    </mask>
+                    <use fill="#979797" fill-rule="nonzero" xlink:href="#me9vey6kbb"/>
+                    <g mask="url(#k88p5io8sc)">
+                        <g>
+                            <g>
+                                <path fill="#50B748" d="M0 0L24 14 0 28z" transform="translate(-3 -5) translate(1 14)"/>
+                                <path fill="#F29326" d="M48 0L48 28 24 14z" transform="translate(-3 -5) translate(1 14)"/>
+                            </g>
+                            <g>
+                                <path fill="#009DDE" d="M24 14L0 28 0 0z" transform="translate(-3 -5) rotate(-60 36.624 20.134)"/>
+                                <path fill="#E20714" d="M24 14L48 28 48 0z" transform="translate(-3 -5) rotate(-60 36.624 20.134)"/>
+                            </g>
+                            <g>
+                                <path fill="#164193" d="M24 14L0 28 0 0z" transform="translate(-3 -5) rotate(60 12.376 21.866)"/>
+                                <path fill="#804996" d="M24 14L48 28 48 0z" transform="translate(-3 -5) rotate(60 12.376 21.866)"/>
+                            </g>
+                        </g>
+                    </g>
+                </g>
             </g>
         </g>
-        <path fill="#FFF" fill-rule="nonzero" d="M39.556 8.444c8.592 8.591 8.592 22.52 0 31.112L37.79 37.79c7.615-7.616 7.615-19.962 0-27.578-7.616-7.615-19.962-7.615-27.578 0-7.615 7.616-7.615 19.962 0 27.578l-1.767 1.767c-8.592-8.591-8.592-22.52 0-31.112 8.591-8.592 22.52-8.592 31.112 0z"/>
     </g>
 </svg>

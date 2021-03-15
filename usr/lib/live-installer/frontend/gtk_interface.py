@@ -24,7 +24,6 @@ from gi.repository import Gtk, Gdk, GdkPixbuf, GObject, WebKit2
 gettext.install("live-installer", "/usr/share/gooroom/locale")
 
 LOADING_ANIMATION = '/usr/share/live-installer/loading.gif'
-WELCOME_GOOROOM = '/usr/share/gooroom-guide/guide/ko/1_intro.png'
 
 # Used as a decorator to run things in the background
 def async(func):
@@ -298,7 +297,7 @@ class InstallerWindow:
         #                            base_width=750, 
         #                            base_height=500)
 
-        #self.window.set_decorated(False)
+        self.window.set_decorated(False)
         self.window.show_all()
 
         self.assign_lang(self.builder.get_object("combobox_language"))
@@ -547,7 +546,7 @@ class InstallerWindow:
         self.setup.print_setup()
 
     def quit_cb(self, widget, data=None):
-        if QuestionDialog(_("Quit?"), _("Are you sure you want to quit the installer?")):
+        if QuestionDialog(_("Quit"), _("Are you sure you want to quit the installer?")):
             Gtk.main_quit()
             return False
         else:
@@ -787,25 +786,6 @@ class InstallerWindow:
             treeview.scroll_to_cell(path)
         except NameError: pass  # set_keyboard_layout not set
 
-    def assign_language(self, treeview, data=None):
-        ''' Called whenever someone updates the language '''
-        model = treeview.get_model()
-        selection = treeview.get_selection()
-        if selection.count_selected_rows > 0:
-            (model, iter) = selection.get_selected()
-            if iter is not None:
-                self.setup.language = model.get_value(iter, 3)
-
-                self.setup.print_setup()
-                self.set_agreement()
-                gettext.translation('live-installer', "/usr/share/gooroom/locale",
-                                languages=[self.setup.language, self.setup.language.split('_')[0]],
-                                fallback=True).install()  # Try e.g. zh_CN, zh, or fallback to hardcoded English
-                try:
-                    self.i18n()
-                except:
-                    pass # Best effort. Fails the first time as self.column1 doesn't exist yet.
-
     def assign_lang(self, combobox, data=None):
         tree_iter = combobox.get_active_iter()
 
@@ -941,6 +921,7 @@ class InstallerWindow:
 
     def show_consent_form (self,button):
         win = self.builder.get_object("consent_window")
+        win.set_title (_("Hancom Gooroom Software License Agreement"))
         win.run()
         win.hide()
 
@@ -1362,7 +1343,8 @@ class InstallerWindow:
         if(scrolledwindow.get_child()!= None):
             scrolledwindow.remove(scrolledwindow.get_child())
 
-        self.agree_path = "/usr/share/live-installer/contract/ko/"
+        languages=self.setup.language.split('_')[0]
+        self.agree_path = "/usr/share/live-installer/contract/%s/"%languages
         if os.path.exists(self.agree_path):
             agreement = WebKit2.WebView.new()
             agreement.connect('context_menu',self.disable_right_cb)
