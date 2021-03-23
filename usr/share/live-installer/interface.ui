@@ -5,7 +5,7 @@
   <object class="GtkSizeGroup"/>
   <object class="GtkImage" id="image10">
     <property name="name">button_maximize</property>
-    <property name="width_request">38</property>
+    <property name="width_request">34</property>
     <property name="height_request">24</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -15,7 +15,7 @@
     </style>
   </object>
   <object class="GtkImage" id="image12">
-    <property name="width_request">38</property>
+    <property name="width_request">34</property>
     <property name="height_request">24</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -36,6 +36,8 @@
     <property name="pixbuf">own/ic-refresh-blue.svg</property>
   </object>
   <object class="GtkImage" id="image9">
+    <property name="width_request">34</property>
+    <property name="height_request">24</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="pixbuf">own/rest.svg</property>
@@ -82,19 +84,18 @@
                     <property name="pixel_size">16</property>
                   </object>
                 </child>
-                <style>
-                  <class name=" border-radius: 16px;&#10;  background-color: #1c1c1c;"/>
-                </style>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="fill">True</property>
+                <property name="fill">False</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
               <object class="GtkBox" id="right_box">
                 <property name="name">right_box</property>
+                <property name="width_request">500</property>
+                <property name="height_request">500</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="hexpand">True</property>
@@ -106,12 +107,10 @@
                     <property name="can_focus">False</property>
                     <property name="halign">end</property>
                     <property name="margin_right">20</property>
-                    <property name="margin_top">20</property>
+                    <property name="margin_top">10</property>
                     <child>
                       <object class="GtkButton" id="button_iconify">
                         <property name="name">button_iconify</property>
-                        <property name="width_request">38</property>
-                        <property name="height_request">24</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -204,13 +203,15 @@
                             <property name="can_focus">False</property>
                             <property name="halign">start</property>
                             <property name="valign">start</property>
-                            <property name="label" translatable="yes">label</property>
-                            <property name="use_markup">True</property>
                             <property name="wrap">True</property>
+                            <property name="wrap_mode">word-char</property>
+                            <attributes>
+                              <attribute name="font-desc" value="나눔고딕 10"/>
+                            </attributes>
                           </object>
                           <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
                             <property name="position">1</property>
                           </packing>
                         </child>
@@ -307,7 +308,7 @@
                                     <child>
                                       <object class="GtkComboBox" id="combobox_language">
                                         <property name="name">combobox_language</property>
-                                        <property name="width_request">300</property>
+                                        <property name="width_request">180</property>
                                         <property name="height_request">34</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
@@ -323,7 +324,7 @@
                                     <child>
                                       <object class="GtkComboBox" id="combobox_timezones">
                                         <property name="name">combobox_timezones</property>
-                                        <property name="width_request">300</property>
+                                        <property name="width_request">180</property>
                                         <property name="height_request">34</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
@@ -339,7 +340,7 @@
                                     <child>
                                       <object class="GtkComboBox" id="combobox_kb_model">
                                         <property name="name">combobox_kb_model</property>
-                                        <property name="width_request">300</property>
+                                        <property name="width_request">180</property>
                                         <property name="height_request">34</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
@@ -355,7 +356,7 @@
                                     <child>
                                       <object class="GtkComboBox" id="combobox_layout">
                                         <property name="name">combobox_layout</property>
-                                        <property name="width_request">300</property>
+                                        <property name="width_request">180</property>
                                         <property name="height_request">34</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
@@ -1160,7 +1161,7 @@
                     <property name="valign">end</property>
                     <property name="margin_right">40</property>
                     <property name="margin_top">40</property>
-                    <property name="margin_bottom">20</property>
+                    <property name="margin_bottom">23</property>
                     <property name="spacing">10</property>
                     <child>
                       <placeholder/>
@@ -1193,7 +1194,7 @@
     </child>
   </object>
   <object class="GtkDialog" id="consent_window">
-    <property name="width_request">650</property>
+    <property name="width_request">750</property>
     <property name="height_request">456</property>
     <property name="can_focus">False</property>
     <property name="type_hint">dialog</property>

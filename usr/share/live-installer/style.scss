@@ -5,20 +5,22 @@ label { font-family: NotoSansCJKkr; }
   background-color: #000000;
   border-radius: 5px;
 }
+#main_window:backdrop {
+  box-shadow: 0 2px 8px 3px rgba(0, 0, 0, 0.85);
+}
 main_window,
 box#installer_window {
   border-radius: 16px;
   background-color: #1c1c1c;
 }
 box#right_box {
-  min-width :610px;
   border-radius: 0px 16px 16px 0px;
   background-color: #ffffff;
 }
 
 .label_button {
     font-family: NotoSansCJKkr;
-    font-size: 13px;
+    font-size: 11px;
     color: #0251ff;
     text-decoration: underline;
     background-color: #ffffff;
@@ -29,7 +31,7 @@ box#right_box {
   background-color: rgba(201, 201, 201, 0.6);
   border-color: rgba(201, 201, 201, 0.6);
   font-family: NotoSansCJKkr;
-  font-size: 13px;
+  font-size: 11px;
   }.entry:focus {
     border-color: #4a90e2;
     background-color: #ffffff;
@@ -40,7 +42,7 @@ box#right_box {
   font-family: NotoSansCJKkr;
   }.combobox > box > button.combo > box > arrow {
     min-width: 24px;
-    min-height: 24px;
+    min-height: 15px;
     -gtk-icon-source: -gtk-scaled(url('/usr/share/live-installer/own/show-arrow.svg'));
 }
 .combobox > window > menu {
@@ -83,8 +85,8 @@ menuitem:hover{
 }
 
 #button_next, #button_back, #button_reboot{
-  min-width: 120px;
-  min-height: 34px;
+  min-width: 98px;
+  min-height: 30px;
   border-radius: 5px;
   background-color: #4a73d6;
   font-family: NotoSansCJKkr;
@@ -102,7 +104,7 @@ menuitem:hover{
   background-color: #9b9b9b;
   border-color: #9b9b9b;
   font-family: NotoSansCJKkr;
-  font-size: 13px;
+  font-size: 11px;
   color: #ffffff;
 }
 #button_stop:hover { background-color: #828282;  }

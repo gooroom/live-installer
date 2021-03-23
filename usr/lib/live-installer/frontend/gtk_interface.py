@@ -298,6 +298,9 @@ class InstallerWindow:
         #                            base_height=500)
 
         self.window.set_decorated(False)
+        self.set_round_edges (self.window)
+        self.window.set_app_paintable(True)
+        self.set_window_size()
         self.window.show_all()
 
         self.assign_lang(self.builder.get_object("combobox_language"))
@@ -671,27 +674,15 @@ class InstallerWindow:
         combobox.set_model(language_store)
         combobox.set_active_iter(set_language_init);
         
-    def map_scrollable(self):
-        window = Gtk.Window()
+    def set_window_size(self):
+        window = self.window.get_root_window()
         screen = window.get_screen()
-        screen_width = screen.width()
-        screen_height = screen.height()
 
-        scrolled_window = self.builder.get_object("scrolled_timezones")
+        right_box = self.builder.get_object ("right_box")
 
-        if screen_height <= 600:
-            scrolled_window.set_min_content_height(360)
-            h_size = 360
-        else:
-            scrolled_window.set_min_content_height(410)
-            h_size = 410
+        if ( screen.width() > 800 and screen.height() > 600):
+            right_box.set_size_request (750,550);
 
-        if screen_width <= 800:
-            scrolled_window.set_min_content_width(450)
-        else:
-            scrolled_window.set_min_content_width(800)
-
-        return h_size
 
     def build_kb_variants (self):
         if ("_" in self.setup.language):
@@ -997,7 +988,7 @@ class InstallerWindow:
                     self.builder.get_object("label_mismatch").set_markup("<span fgcolor='#3c3c3c'><sub><i>%s</i></sub></span>"%_("Passwords match."))
                 else:
                     self.builder.get_object("image_mismatch").set_from_stock(Gtk.STOCK_OK, Gtk.IconSize.BUTTON)
-                    self.builder.get_object("label_mismatch").set_label(err_msg)
+                    self.builder.get_object("label_mismatch").set_markup("<span fgcolor='#3c3c3c'><sub><i>%s</i></sub></span>"%_(err_msg))
                     self.builder.get_object("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It should be more than 8 letters as a combination of alphabets, numbers and special characters(!@#$%^&amp;())."))
         self.setup.print_setup()
 
@@ -1193,8 +1184,8 @@ class InstallerWindow:
         #model.append(top, (_("Automatic login: ") + bold(_("enabled") if self.setup.autologin else _("disabled")),))
         top = model.append(None, (_("System settings"),))
         model.append(top, (_("Hostname: ") + bold(self.setup.hostname),))
-        top = model.append(None, (_("Encrypted home settings"),))
-        model.append(top, (_("Encrypted home: ") + bold(_("ecryptfs (Kernel Level Encryption)") if self.setup.ecryptfs else _("encfs (User Level Encryption)")),))
+        #top = model.append(None, (_("Encrypted home settings"),))
+        #model.append(top, (_("Encrypted home: ") + bold(_("ecryptfs (Kernel Level Encryption)") if self.setup.ecryptfs else _("encfs (User Level Encryption)")),))
         top = model.append(None, (_("Filesystem operations"),))
         model.append(top, (bold(_("Install bootloader on %s") % self.setup.grub_device) if self.setup.grub_device else _("Do not install bootloader"),))
         if self.setup.skip_mount:
@@ -1337,6 +1328,17 @@ class InstallerWindow:
 
     def disable_right_cb(self,web_view, context_menu, event, hit_test_result):
         context_menu.remove_all()
+
+    def set_round_edges (self, window):
+        screen = window.get_screen();
+
+        if(screen.is_composited()):
+            visual = screen.get_rgba_visual();
+            
+            if(visual is None):
+                visual = screen.get_system_visual (screen)
+                
+            window.set_visual (visual);
 
     def set_agreement(self):
         scrolledwindow = self.builder.get_object("scrolled_agreement")
