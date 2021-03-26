@@ -437,7 +437,7 @@ class InstallerWindow:
         desc = _("Installation completed successfully.\nDo you want to restart your PC to use the new Hancom Gooroom?")
         self.builder.get_object("label_description2").set_label(desc)
 
-        self.builder.get_object("key_test_window").set_title(_("Keyboard Test"))
+        self.builder.get_object("key_test_window").set_title(_("Test Keyboard"))
         self.builder.get_object("label_key_test").set_label(_("Please enter a test letter."))
 
         self.button_label.set_markup(_("<span fgcolor='#000000'>I agree with</span> <span fgcolor='#0251ff'>the Software License.</span>"))
