@@ -1,3 +1,15 @@
+live-installer (2021.04.21+grm2u1) unstable; urgency=medium
+
+  [ boyeon.choi ]
+  * [0bd456d1] Removed the questionmark on QuestionDialog title
+
+  [ jongkyung.woo ]
+  * [e5de8875] Autostart in debian-installer-launcher.desktop
+
+  [ Gooroom Autobuilder ]
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 01 Apr 2021 12:22:17 +0900
+
 live-installer (2020.11.20+grm2u1) unstable; urgency=medium
 
   [ boyeon.choi ]
