@@ -1,3 +1,10 @@
+live-installer (2021.04.01+grm2u1+han2u2) unstable; urgency=medium
+
+  [ boyeon.choi ]
+  * [2dd81659] Adjusted the window size  according to resolution
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Fri, 02 Apr 2021 17:06:00 +0900
+
 live-installer (2021.04.01+grm2u1+han2u1) unstable; urgency=medium
 
   [ boyeon.choi ]
