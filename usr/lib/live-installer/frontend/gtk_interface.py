@@ -678,10 +678,16 @@ class InstallerWindow:
         window = self.window.get_root_window()
         screen = window.get_screen()
 
-        right_box = self.builder.get_object ("right_box")
-
         if ( screen.width() > 800 and screen.height() > 600):
+            right_box = self.builder.get_object ("right_box")
+            vbox = self.builder.get_object ("vbox20")
+            progressbar = self.builder.get_object("progressbar")
+            label = self.builder.get_object("label_install_progress")
+            
             right_box.set_size_request (750,550);
+            vbox.set_size_request (650,-1);
+            progressbar.set_size_request (650,-1);
+            label.set_width_chars (80);
 
 
     def build_kb_variants (self):
