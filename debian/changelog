@@ -1,3 +1,12 @@
+live-installer (0.2.1+grm1u10) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [e12f64b0] Released Version Gooroom 1.8
+
+  [ Gooroom Autobuilder ]
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Tue, 18 May 2021 20:13:41 +0900
+
 live-installer (0.2.1+grm1u9) unstable; urgency=medium
 
   [ jongkyung.woo ]
