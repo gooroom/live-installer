@@ -1,3 +1,10 @@
+live-installer (2021.07.13+grm2u1) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [7678ea36] Added setsigs.sh Writing file signatures
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Tue, 13 Jul 2021 08:52:17 +0900
+
 live-installer (2021.05.06+grm2u1) unstable; urgency=medium
 
   [ jongkyung.woo ]
