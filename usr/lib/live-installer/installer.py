@@ -604,7 +604,7 @@ class InstallerEngine:
             self.do_run_in_chroot("dpkg -i /debs/*.deb")
             os.system("rm -rf /target/debs")
 
-            print " --> Writing file signatures"
+            print(" --> Writing file signatures")
             our_current += 1
             self.update_progress(our_total, our_current, False, False, _("Writing file signatures"))
             os.system("chroot /target/ /bin/bash -c \"/ima/setsigs.sh /ima\"")
