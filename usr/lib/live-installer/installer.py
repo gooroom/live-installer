@@ -603,6 +603,12 @@ class InstallerEngine:
             os.system("cp /run/live/medium/pool/main/g/gooroom-exe-protector/*.deb /target/debs/")
             self.do_run_in_chroot("dpkg -i /debs/*.deb")
             os.system("rm -rf /target/debs")
+
+            print " --> Writing file signatures"
+            our_current += 1
+            self.update_progress(our_total, our_current, False, False, _("Writing file signatures"))
+            os.system("chroot /target/ /bin/bash -c \"/ima/setsigs.sh /ima\"")
+            os.system("rm -rf /target/ima")
         else:
             # Recreate initramfs (needed in case of skip_mount also, to include things like mdadm/dm-crypt/etc in case its needed to boot a custom install)
             print(" --> Configuring Initramfs")
