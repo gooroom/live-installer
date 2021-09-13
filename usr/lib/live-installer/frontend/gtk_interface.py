@@ -169,10 +169,10 @@ class InstallerWindow:
         grub_box.set_sensitive(True)
 
         # encrypt_home
-        ecryptfs_check = self.builder.get_object("radiobutton_ecryptfs")
-        ecryptfs_check.connect("toggled", self.assign_ecryptfs_install)
-        encfs_check = self.builder.get_object("radiobutton_encfs")
-        encfs_check.connect("toggled", self.assign_encfs_install)
+        #ecryptfs_check = self.builder.get_object("radiobutton_ecryptfs")
+        #ecryptfs_check.connect("toggled", self.assign_ecryptfs_install)
+        #encfs_check = self.builder.get_object("radiobutton_encfs")
+        #encfs_check.connect("toggled", self.assign_encfs_install)
         
         # kb models
         cell = Gtk.CellRendererText()
@@ -402,10 +402,10 @@ class InstallerWindow:
         self.builder.get_object("label_grub_help").set_label(_("GRUB is a bootloader used to load the Linux kernel."))
 
         # encrypt home
-        self.builder.get_object("label_encrypt_home").set_markup("<b>%s</b>" % _("Encrypt home"))
-        self.builder.get_object("radiobutton_ecryptfs").set_label(_("Ecryptfs (Kernel Level Encryption for Gooroom Platform recommendations)"))
-        self.builder.get_object("radiobutton_encfs").set_label(_("Encfs (User Level Encryption for advanced users)"))
-        self.builder.get_object("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors,\n Installation is not recommended except for research purpose to verify the encryption function.\n"))
+        #self.builder.get_object("label_encrypt_home").set_markup("<b>%s</b>" % _("Encrypt home"))
+        #self.builder.get_object("radiobutton_ecryptfs").set_label(_("Ecryptfs (Kernel Level Encryption for Gooroom Platform recommendations)"))
+        #self.builder.get_object("radiobutton_encfs").set_label(_("Encfs (User Level Encryption for advanced users)"))
+        #self.builder.get_object("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors,\n Installation is not recommended except for research purpose to verify the encryption function.\n"))
 
         # keyboard page
         self.builder.get_object("label_test_kb").set_label(_("Use this box to test your keyboard layout."))

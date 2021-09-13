@@ -20,7 +20,6 @@ Depends: ${misc:Depends}, ${python3:Depends}
   , python3-gi
   , python3-pil
   , streamer
-  , imagemagick
   , isoquery
   , desktop-file-utils
   , shared-mime-info
