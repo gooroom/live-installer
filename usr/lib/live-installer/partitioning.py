@@ -73,6 +73,7 @@ def build_partitions(_installer):
     installer.builder.get_object("treeview_disks").expand_all()
     installer.window.get_window().set_cursor(None)
     installer.window.set_sensitive(True)
+    build_grub_partitions()
 
 def update_html_preview(selection):
     model, row = selection.get_selected()
@@ -164,8 +165,9 @@ def build_grub_partitions():
     except IndexError: preferred = ''
     devices = sorted(list(d[0] for d in installer.setup.partition_setup.disks) +
                      list([_f for _f in (p.name for p in installer.setup.partitions) if _f]))
-    devices.remove(preferred)
-    devices.insert(0,preferred)
+    if preferred:
+        devices.remove(preferred)
+        devices.insert(0,preferred)
 
     for p in devices: grub_model.append([p])
     installer.builder.get_object("combobox_grub").set_model(grub_model)

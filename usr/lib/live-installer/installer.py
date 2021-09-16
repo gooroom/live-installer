@@ -231,6 +231,14 @@ class InstallerEngine:
         if not found_initrd:
             print("WARNING: No initrd found!!")
 
+        ############# for gooroom-initial-setup #############
+        os.system("mkdir -p /target/debs")
+        os.system("cp /run/live/medium/pool/main/g/gooroom-initial-setup/gooroom-initial-setup* /target/debs/")
+        os.system("cp /run/live/medium/pool/main/g/gnome-online-accounts/* /target/debs/")
+        self.do_run_in_chroot("dpkg -i /debs/*.deb")
+        os.system("rm -rf /target/debs")
+        #####################################################
+
         if (setup.gptonefi):
             print(" --> Installing EFI packages and Adding EFI entry")
             os.system("mkdir -p /target/boot/efi/EFI/debian")
@@ -279,90 +287,11 @@ class InstallerEngine:
         self.do_run_in_chroot("rm -rf /etc/live")
         self.do_run_in_chroot("rm -rf /run/live")
 
-        # add new user
-        print(" --> Adding new user")
-        our_current += 1
-        self.update_progress(our_total, our_current, False, False, _("Adding new user to the system"))
-
-        # encrypt home
-        if setup.ecryptfs:
-            print(" --> Setup ecryptfs")
-            # ecryptfs-utils
-            if os.path.exists('/target/sbin/mount.ecryptfs'):
-                self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" --encrypt-home {username}'.format(real_name=setup.real_name.replace('"', r'\"'), username=setup.username))
-            else:
-                self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" {username}'.format(real_name=setup.real_name.replace('"', r'\"'), username=setup.username))
-
-        if setup.encfs:
-            print(" --> Setup encfs")
-            # install encfs libtinyxml2-4 libpam-encfs libck-connector0 libpam-ck-connector
-            os.system("mkdir -p /target/debs")
-            os.system("cp /run/live/medium/pool/main/e/encfs/*.deb /target/debs/")
-            os.system("cp /run/live/medium/pool/main/libp/libpam-encfs/*.deb /target/debs/")
-            os.system("cp /run/live/medium/pool/main/t/tinyxml2/*.deb /target/debs/")
-            os.system("cp /run/live/medium/pool/main/c/consolekit/*.deb /target/debs/")
-            os.system("cp /run/live/medium/pool/main/e/expect/*.deb /target/debs/")
-            os.system("cp /run/live/medium/pool/main/g/gooroom-encfs-utils/*.deb /target/debs/")
-            self.do_run_in_chroot("DEBIAN_FRONTEND=noninteractive dpkg -i /debs/*.deb")
-            os.system("rm -rf /target/debs")
-
-            if os.path.exists('/target/usr/bin/encfs'):
-                # grouadd fuse
-                self.do_run_in_chroot("groupadd fuse")
-
-                # adduser --disabled-login
-                self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" --encfs-encrypt-home {user}'.format(real_name=setup.real_name.replace('"', r'\"'), user=setup.username))
-
-                # mount /home/.encfs/{user}
-                self.do_run_in_chroot('echo -e \"p\\n{password}\" | encfs -v --stdinpass /home/.encfs/{user} /home/{user}'.format(password=setup.password1, user=setup.username))
-                time.sleep(5)
-                print(" --> cp -ap /target/home/%s.bak/.[a-z]* /target/home/%s/" % (setup.username, setup.username))
-                os.system("cp -ap /target/home/%s.bak/.[a-z]* /target/home/%s/" % (setup.username, setup.username))
-                self.do_run_in_chroot('chown {user}:{user} /home/.encfs/{user}/.encfs6.xml'.format(user=setup.username))
-
-                # permission
-                self.do_run_in_chroot("chgrp fuse /etc/fuse.conf")
-                self.do_run_in_chroot("chgrp fuse /bin/fusermount")
-                self.do_run_in_chroot("chmod 4750 /bin/fusermount")
-
-                # umount
-                print(" --> fusermount -u /target/home/%s" % setup.username)
-                os.system("fusermount -u /target/home/%s" % setup.username)
-                print(" --> rm -rf /target/home/%s.bak" % setup.username)
-                os.system("rm -rf /target/home/%s.bak" % setup.username)
-
-            else:
-                self.do_run_in_chroot('adduser --disabled-login --gecos "{real_name}" {user}'.format(real_name=setup.real_name.replace('"', r'\"'), user=setup.username))
-
-        for group in 'adm audio bluetooth cdrom dialout dip fax floppy fuse lpadmin netdev plugdev powerdev sambashare scanner sudo tape users vboxusers video'.split():
-            self.do_run_in_chroot("adduser {user} {group}".format(user=setup.username, group=group))
-
-        fp = open("/target/tmp/.passwd", "w")
-        fp.write(setup.username +  ":" + setup.password1 + "\n")
-        fp.close()
-        self.do_run_in_chroot("cat /tmp/.passwd | chpasswd")
-        os.system("rm -f /target/tmp/.passwd")
-
         # Lock and delete root password
         self.do_run_in_chroot("passwd -dl root")
 
         # Set LightDM to show user list by default
         self.do_run_in_chroot(r"sed -i -r 's/^#?(greeter-hide-users)\s*=.*/\1=false/' /etc/lightdm/lightdm.conf")
-
-        # Set autologin for user if they so elected
-        if setup.autologin:
-            # LightDM
-            self.do_run_in_chroot(r"sed -i -r 's/^#?(autologin-user)\s*=.*/\1={user}/' /etc/lightdm/lightdm.conf".format(user=setup.username))
-            # MDM
-            self.do_run_in_chroot(r"sed -i -r -e '/^AutomaticLogin(Enable)?\s*=/d' -e 's/^(\[daemon\])/\1\nAutomaticLoginEnable=true\nAutomaticLogin={user}/' /etc/mdm/mdm.conf".format(user=setup.username))
-            # GDM3
-            self.do_run_in_chroot(r"sed -i -r -e '/^(#\s*)?AutomaticLogin(Enable)?\s*=/d' -e 's/^(\[daemon\])/\1\nAutomaticLoginEnable=true\nAutomaticLogin={user}/' /etc/gdm3/daemon.conf".format(user=setup.username))
-            # KDE4
-            self.do_run_in_chroot(r"sed -i -r -e 's/^#?(AutomaticLoginEnable)\s*=.*/\1=true/' -e 's/^#?(AutomaticLoginUser)\s*.*/\1={user}/' /etc/kde4/kdm/kdmrc".format(user=setup.username))
-            # LXDM
-            self.do_run_in_chroot(r"sed -i -r -e 's/^#?(autologin)\s*=.*/\1={user}/' /etc/lxdm/lxdm.conf".format(user=setup.username))
-            # SLiM
-            self.do_run_in_chroot(r"sed -i -r -e 's/^#?(default_user)\s.*/\1  {user}/' -e 's/^#?(auto_login)\s.*/\1  yes/' /etc/slim.conf".format(user=setup.username))
 
         # write the /etc/fstab
         print(" --> Writing fstab")
@@ -742,12 +671,10 @@ class Setup(object):
     keyboard_layout = None
     keyboard_variant = None
     partitions = [] #Array of PartitionSetup objects
-    username = None
-    hostname = None
+    hostname = "gooroom"
     autologin = False
     password1 = None
     password2 = None
-    real_name = None
     grub_device = None
     ecryptfs = True
     encfs = False
@@ -774,7 +701,6 @@ class Setup(object):
             print("language: %s" % self.language)
             print("timezone: %s" % self.timezone)
             print("keyboard: %s - %s (%s) - %s - %s (%s)" % (self.keyboard_model, self.keyboard_layout, self.keyboard_variant, self.keyboard_model_description, self.keyboard_layout_description, self.keyboard_variant_description))
-            print("user: %s (%s)" % (self.username, self.real_name))
             print("autologin: ", self.autologin)
             print("hostname: %s " % self.hostname)
             print("passwords: %s - %s" % (self.password1, self.password2))

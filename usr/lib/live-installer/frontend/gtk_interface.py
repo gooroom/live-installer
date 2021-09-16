@@ -86,22 +86,18 @@ class InstallerWindow:
         # Wizard pages
         (self.PAGE_LANGUAGE,
          self.PAGE_PARTITIONS,
-         self.PAGE_USER,
-         self.PAGE_ADVANCED,
          self.PAGE_KEYBOARD,
          self.PAGE_OVERVIEW,
          self.PAGE_INSTALL,
          self.PAGE_TIMEZONE,
          self.PAGE_CUSTOMWARNING,
-         self.PAGE_CUSTOMPAUSED) = list(range(10))
-        self.wizard_pages = list(range(10))
+         self.PAGE_CUSTOMPAUSED) = list(range(8))
+        self.wizard_pages = list(range(8))
         self.wizard_pages[self.PAGE_LANGUAGE] = WizardPage(_("Language"), "locales.png")
         self.wizard_pages[self.PAGE_TIMEZONE] = WizardPage(_("Timezone"), "time.png")
         self.wizard_pages[self.PAGE_KEYBOARD] = WizardPage(_("Keyboard layout"), "keyboard.png")
-        self.wizard_pages[self.PAGE_USER] = WizardPage(_("User info"), "user.png")
         self.wizard_pages[self.PAGE_PARTITIONS] = WizardPage(_("Partitioning"), "hdd.svg")
         self.wizard_pages[self.PAGE_CUSTOMWARNING] = WizardPage(_("Please make sure you wish to manage partitions manually"), "hdd.svg")
-        self.wizard_pages[self.PAGE_ADVANCED] = WizardPage(_("Advanced options"), "advanced.png")
         self.wizard_pages[self.PAGE_OVERVIEW] = WizardPage(_("Summary"), "summary.png")
         self.wizard_pages[self.PAGE_INSTALL] = WizardPage(_("Installing Gooroom Platform"), "install.png")
         self.wizard_pages[self.PAGE_CUSTOMPAUSED] = WizardPage(_("Installation paused: please finish the custom installation"), "install.png")
@@ -150,14 +146,6 @@ class InstallerWindow:
             col = Gtk.TreeViewColumn("", text, markup=i)  # real title is set in i18n()
             self.builder.get_object("treeview_disks").append_column(col)
 
-        self.builder.get_object("entry_your_name").connect("notify::text", self.assign_realname)
-        self.builder.get_object("entry_username").connect("notify::text", self.assign_username)
-        self.builder.get_object("entry_hostname").connect("notify::text", self.assign_hostname)
-
-        # events for detecting password mismatch..
-        self.builder.get_object("entry_userpass1").connect("changed", self.assign_password)
-        self.builder.get_object("entry_userpass2").connect("changed", self.assign_password)
-
         # link the checkbutton to the combobox
         grub_check = self.builder.get_object("checkbutton_grub")
         grub_box = self.builder.get_object("combobox_grub")
@@ -167,12 +155,6 @@ class InstallerWindow:
         # Install Grub by default
         grub_check.set_active(True)
         grub_box.set_sensitive(True)
-
-        # encrypt_home
-        #ecryptfs_check = self.builder.get_object("radiobutton_ecryptfs")
-        #ecryptfs_check.connect("toggled", self.assign_ecryptfs_install)
-        #encfs_check = self.builder.get_object("radiobutton_encfs")
-        #encfs_check.connect("toggled", self.assign_encfs_install)
         
         # kb models
         cell = Gtk.CellRendererText()
@@ -210,14 +192,6 @@ class InstallerWindow:
             self.window.set_title("%s" % self.installer.get_distribution_name())
 
         self.i18n()
-
-        # Pre-fill user details in debug mode
-        if __debug__:
-            self.builder.get_object("entry_your_name").set_text("John Boone")
-            self.builder.get_object("entry_username").set_text("john")
-            self.builder.get_object("entry_hostname").set_text("mars")
-            self.builder.get_object("entry_userpass1").set_text("dummy_password")
-            self.builder.get_object("entry_userpass2").set_text("dummy_password")
 
         # build partition list
         self.should_pulse = False
@@ -376,22 +350,6 @@ class InstallerWindow:
 
         self.builder.get_object("button_edit").set_label(_("Edit partitions"))
         self.builder.get_object("button_refresh").set_label(_("Refresh"))
-        #self.builder.get_object("button_custommount").set_label(_("Expert mode"))
-        self.label_your_name_help = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your full name.")
-        self.label_your_name_help2 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("You cannot use 'root' as your full name.")
-        self.label_your_name_help3 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Your full name must not be more than 32 characters.")
-        self.builder.get_object("label_your_name").set_markup("<b>%s</b>" % _("Your full name"))
-        self.builder.get_object("label_your_name_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your full name."))
-        self.label_username_help = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This is the name you will use to log in to your computer.")
-        self.label_username_help2 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It's recommended at least 1 to 32 letters which starts with lowcase alphabet and combined of lowcase alphabets, numbers and special character(-).")
-        self.label_username_help3 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("You cannot use 'root' as user name.")
-        self.label_username_help4 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("User name must not be more than 32 characters.")
-        self.builder.get_object("label_username").set_markup("<b>%s</b>" % _("Your username"))
-        self.builder.get_object("label_username_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This is the name you will use to log in to your computer."))
-        self.builder.get_object("label_choose_pass").set_markup("<b>%s</b>" % _("Your password"))
-        self.builder.get_object("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your password twice to ensure it is correct."))
-        self.builder.get_object("label_hostname").set_markup("<b>%s</b>" % _("Hostname"))
-        self.builder.get_object("label_hostname_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This hostname will be the computer's name on the network."))
 
         # timezones
         self.builder.get_object("label_timezones").set_label(_("Selected timezone:"))
@@ -400,12 +358,6 @@ class InstallerWindow:
         self.builder.get_object("label_grub").set_markup("<b>%s</b>" % _("Bootloader"))
         self.builder.get_object("checkbutton_grub").set_label(_("Install GRUB"))
         self.builder.get_object("label_grub_help").set_label(_("GRUB is a bootloader used to load the Linux kernel."))
-
-        # encrypt home
-        #self.builder.get_object("label_encrypt_home").set_markup("<b>%s</b>" % _("Encrypt home"))
-        #self.builder.get_object("radiobutton_ecryptfs").set_label(_("Ecryptfs (Kernel Level Encryption for Gooroom Platform recommendations)"))
-        #self.builder.get_object("radiobutton_encfs").set_label(_("Encfs (User Level Encryption for advanced users)"))
-        #self.builder.get_object("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors,\n Installation is not recommended except for research purpose to verify the encryption function.\n"))
 
         # keyboard page
         self.builder.get_object("label_test_kb").set_label(_("Use this box to test your keyboard layout."))
@@ -440,40 +392,6 @@ class InstallerWindow:
         self.column10.set_title(_("Layout"))
         self.column11.set_title(_("Variant"))
         self.column12.set_title(_("Overview"))
-
-    def assign_realname(self, entry, prop):
-        self.setup.real_name = entry.props.text
-        # Try to set the username (doesn't matter if it fails)
-        try:
-            text = entry.props.text.strip().lower()
-            if " " in entry.props.text:
-                elements = text.split()
-                text = elements[0]
-            self.setup.username = text
-            self.builder.get_object("entry_username").set_text(text)
-        except:
-            pass
-
-        if (self.setup.real_name == 'root'):
-            self.builder.get_object("label_your_name_help").set_markup(self.     label_your_name_help2)
-        elif (len(self.setup.real_name) > 32):
-            self.builder.get_object("label_your_name_help").set_markup(self.     label_your_name_help3)
-        else:
-            self.builder.get_object("label_your_name_help").set_markup(self.     label_your_name_help)
-
-        self.setup.print_setup()
-
-    def assign_username(self, entry, prop):
-        self.setup.username = entry.props.text
-        if not re.match(r'^[a-z][-a-z0-9]*$', self.setup.username):
-            self.builder.get_object("label_username_help").set_markup(self.label_username_help2)
-        elif (self.setup.username == 'root'):
-            self.builder.get_object("label_username_help").set_markup(self.label_username_help3)
-        elif (len(self.setup.username) > 32):
-            self.builder.get_object("label_username_help").set_markup(self.label_username_help4)
-        else:
-            self.builder.get_object("label_username_help").set_markup(self.label_username_help)
-        self.setup.print_setup()
 
     def assign_hostname(self, entry, prop):
         self.setup.hostname = entry.props.text
@@ -691,16 +609,6 @@ class InstallerWindow:
             self.setup.grub_device = row[0]
         self.setup.print_setup()
 
-    def assign_ecryptfs_install(self, radiobutton, data=None):
-        if radiobutton.get_active():
-            self.setup.ecryptfs = True
-            self.setup.encfs = False
-
-    def assign_encfs_install(self, radiobutton, data=None):
-        if radiobutton.get_active():
-            self.setup.encfs = True
-            self.setup.ecryptfs = False
-
     def assign_keyboard_model(self, combobox):
         ''' Called whenever someone updates the keyboard model '''
         model = combobox.get_model()
@@ -772,64 +680,6 @@ class InstallerWindow:
         self.builder.get_object("image_keyboard").set_from_file(filename)
         return False
 
-    def check_password(self, passwd):
-        """ check password """
-
-        #length
-        if not passwd or len(passwd) < 8:
-            return (-1, _("Password is short."))
-
-        char_be = False
-        digit_be = False
-        special_be = False
-
-        password_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&()'
-
-        for p in passwd:
-            #valid char
-            if not p in password_chars:
-                return (-1, _("Invalid character is in password."))
-
-            #security
-            ord_p = ord(p)
-            if (ord_p >=65  and ord_p <= 90) or (ord_p >= 97 and ord_p <= 122):
-                char_be = True
-            elif ord_p >= 48 and ord_p <= 57:
-                digit_be = True
-            else:
-                special_be = True
-
-        if char_be and digit_be and special_be:
-            #success
-            return (0, None)
-        else:
-            return (-1, _("Password security level is low."))
-
-    def assign_password(self, widget):
-        ''' Someone typed into the entry '''
-        self.setup.password1 = self.builder.get_object("entry_userpass1").get_text()
-        self.setup.password2 = self.builder.get_object("entry_userpass2").get_text()
-        self.builder.get_object("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your password twice to ensure it is correct."))
-        if(self.setup.password1 == "" and self.setup.password2 == ""):
-            self.builder.get_object("image_mismatch").hide()
-            self.builder.get_object("label_mismatch").hide()
-        else:
-            self.builder.get_object("image_mismatch").show()
-            self.builder.get_object("label_mismatch").show()
-            if(self.setup.password1 != self.setup.password2):
-                self.builder.get_object("image_mismatch").set_from_stock(Gtk.STOCK_NO, Gtk.IconSize.BUTTON)
-                self.builder.get_object("label_mismatch").set_label(_("Passwords do not match."))
-            else:
-                p_res, err_msg = self.check_password(self.setup.password1)
-                if p_res == 0:
-                    self.builder.get_object("image_mismatch").set_from_stock(Gtk.STOCK_OK, Gtk.IconSize.BUTTON)
-                    self.builder.get_object("label_mismatch").set_label(_("Passwords match."))
-                else:
-                    self.builder.get_object("image_mismatch").set_from_stock(Gtk.STOCK_OK, Gtk.IconSize.BUTTON)
-                    self.builder.get_object("label_mismatch").set_label(err_msg)
-                    self.builder.get_object("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It should be more than 8 letters as a combination of alphabets, numbers and special characters(!@#$%^&amp;())."))
-        self.setup.print_setup()
-
     def activate_page(self, index):
         help_text = _(self.wizard_pages[index].help_text)
         self.builder.get_object("help_label").set_markup("<big><b>%s</b></big>" % help_text)
@@ -895,73 +745,9 @@ class InstallerWindow:
                     iter = model.iter_next(iter)
                 self.activate_page(self.PAGE_KEYBOARD)
             elif(sel == self.PAGE_KEYBOARD):
-                self.activate_page(self.PAGE_USER)
-                self.builder.get_object("entry_your_name").grab_focus()
-            elif(sel == self.PAGE_USER):
-                errorFound = False
-                errorMessage = ""
-
-                p_res, err_msg = self.check_password(self.setup.password1)
-
-                if(self.setup.real_name is None or self.setup.real_name == ""):
-                    errorFound = True
-                    errorMessage = _("Please provide your full name.")
-                elif(self.setup.real_name == 'root'):
-                    errorFound = True
-                    errorMessage = _("Your full name is invalid.")
-                elif(len(self.setup.real_name) > 32):
-                    errorFound = True
-                    errorMessage = _("Your full name is invalid.")
-                elif(self.setup.username is None or self.setup.username == ""):
-                    errorFound = True
-                    errorMessage = _("Please provide a username.")
-                elif not re.match(r'^[a-z][-a-z0-9]*$', self.setup.username):
-                    errorFound = True
-                    errorMessage = _("UserId is invalid.")
-                elif (self.setup.username == 'root'):
-                    errorFound = True
-                    errorMessage = _("UserId is invalid.")
-                elif (len(self.setup.username)> 32):
-                    errorFound = True
-                    errorMessage = _("UserId is invalid.")
-                elif(self.setup.password1 is None or self.setup.password1 == ""):
-                    errorFound = True
-                    errorMessage = _("Please provide a password for your user account.")
-                elif(self.setup.password1 != self.setup.password2):
-                    errorFound = True
-                    errorMessage = _("Your passwords do not match.")
-                elif p_res != 0:
-                    errorFound = True
-                    errorMessage = err_msg
-                elif(self.setup.hostname is None or self.setup.hostname == ""):
-                    errorFound = True
-                    errorMessage = _("Please provide a hostname.")
-                else:
-                    for char in self.setup.username:
-                        if(char.isupper()):
-                            errorFound = True
-                            errorMessage = _("Your username must be lower case.")
-                            break
-                        elif(char.isspace()):
-                            errorFound = True
-                            errorMessage = _("Your username may not contain whitespace characters.")
-
-                    for char in self.setup.hostname:
-                        if(char.isupper()):
-                            errorFound = True
-                            errorMessage = _("The hostname must be lower case.")
-                            break
-                        elif(char.isspace()):
-                            errorFound = True
-                            errorMessage = _("The hostname may not contain whitespace characters.")
-
-                if (errorFound):
-                    WarningDialog(_("Installation Tool"), errorMessage)
-                else:
-                    self.activate_page(self.PAGE_PARTITIONS)
-                    #to prevent duplication of partition
-                    if not self.PARTITIONING_DONE:
-                        partitioning.build_partitions(self)
+                if not self.PARTITIONING_DONE:
+                    partitioning.build_partitions(self)
+                self.activate_page(self.PAGE_PARTITIONS)
             elif(sel == self.PAGE_PARTITIONS):
                 model = self.builder.get_object("treeview_disks").get_model()
 
@@ -1003,17 +789,11 @@ class InstallerWindow:
                         ErrorDialog(_("Installation Tool"), "<b>%s</b>" % _("Please select an EFI partition."),_("An EFI system partition is needed with the following requirements:\n\n - Mount point: /boot/efi\n - Partition flags: Bootable\n - Size: Larger than 100MB\n - Format: vfat or fat32\n\nTo ensure compatibility with Windows we recommend you use the first partition of the disk as the EFI system partition.\n "))
                         return
 
-                partitioning.build_grub_partitions()
-                self.activate_page(self.PAGE_ADVANCED)
-
-            elif(sel == self.PAGE_CUSTOMWARNING):
-                partitioning.build_grub_partitions()
-                self.activate_page(self.PAGE_ADVANCED)
-            elif(sel == self.PAGE_ADVANCED):
                 self.activate_page(self.PAGE_OVERVIEW)
                 self.show_overview()
                 self.builder.get_object("treeview_overview").expand_all()
-                self.builder.get_object("button_next").set_label(_("Install"))
+                self.builder.get_object("button_next").set_label(_("Install")) 
+
             elif(sel == self.PAGE_OVERVIEW):
                 self.builder.get_object("button_next").set_sensitive(False)
                 self.builder.get_object("button_back").set_sensitive(False)
@@ -1026,13 +806,6 @@ class InstallerWindow:
             self.builder.get_object("button_back").set_sensitive(True)
             if(sel == self.PAGE_OVERVIEW):
                 self.builder.get_object("button_next").set_label(_("Next"))
-                self.activate_page(self.PAGE_ADVANCED)
-            elif(sel == self.PAGE_ADVANCED):
-                if (self.setup.skip_mount):
-                    self.activate_page(self.PAGE_CUSTOMWARNING)
-                else:
-                    self.activate_page(self.PAGE_PARTITIONS)
-            elif(sel == self.PAGE_CUSTOMWARNING):
                 self.activate_page(self.PAGE_PARTITIONS)
             elif(sel == self.PAGE_PARTITIONS):
                 #to prevent duplication of partition
@@ -1042,8 +815,6 @@ class InstallerWindow:
                         found_root_partition = True
                 if found_root_partition:
                     self.PARTITIONING_DONE = True
-                self.activate_page(self.PAGE_USER)
-            elif(sel == self.PAGE_USER):
                 self.activate_page(self.PAGE_KEYBOARD)
             elif(sel == self.PAGE_KEYBOARD):
                 self.activate_page(self.PAGE_TIMEZONE)
@@ -1060,14 +831,8 @@ class InstallerWindow:
         model.append(top, (_("Keyboard layout: ") +
                            "<b>%s - %s %s</b>" % (self.setup.keyboard_model_description, self.setup.keyboard_layout_description,
                                                   '(%s)' % self.setup.keyboard_variant_description if self.setup.keyboard_variant_description else ''),))
-        top = model.append(None, (_("User settings"),))
-        model.append(top, (_("Real name: ") + bold(self.setup.real_name),))
-        model.append(top, (_("Username: ") + bold(self.setup.username),))
-        #model.append(top, (_("Automatic login: ") + bold(_("enabled") if self.setup.autologin else _("disabled")),))
         top = model.append(None, (_("System settings"),))
         model.append(top, (_("Hostname: ") + bold(self.setup.hostname),))
-        top = model.append(None, (_("Encrypted home settings"),))
-        model.append(top, (_("Encrypted home: ") + bold(_("ecryptfs (Kernel Level Encryption)") if self.setup.ecryptfs else _("encfs (User Level Encryption)")),))
         top = model.append(None, (_("Filesystem operations"),))
         model.append(top, (bold(_("Install bootloader on %s") % self.setup.grub_device) if self.setup.grub_device else _("Do not install bootloader"),))
         if self.setup.skip_mount:
