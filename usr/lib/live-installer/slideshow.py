@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import time
@@ -23,7 +23,7 @@ pages = [
 
 
 # Used as a decorator to run things in the background
-def async(func):
+async def func():
     def wrapper(*args, **kwargs):
         thread = threading.Thread(target=func, args=args, kwargs=kwargs)
         thread.daemon = True
@@ -54,7 +54,7 @@ class Slideshow():
         try:
             # Prepare pages
             if os.path.isfile(self.template):
-                print 'Template path: ' + self.template
+                print('Template path: ' + self.template)
                 tmplFile = open(self.template,'r')
                 self.templateText = tmplFile.read()
                 tmplFile.close()
@@ -68,19 +68,18 @@ class Slideshow():
                         if os.path.isfile(pagePath):
                             contFile = open(pagePath, 'r')
                             # Merge content with template
-                            html = string.replace(self.templateText, chkString, chkString + contFile.read())
+                            html = self.templateText.replace(chkString, chkString + contFile.read())
                             self.pageContent.append([pagePath, html])
                             contFile.close()
                         else:
-                            print 'Content path does not exist: ' + pagePath
+                            print('Content path does not exist: ' + pagePath)
                 else:
-                    print 'Check string not found in template: ' + chkString
+                    print('Check string not found in template: ' + chkString)
             else:
-                print 'Template path not found: ' + self.template
-        except Exception, detail:
-            print detail
+                print('Template path not found: ' + self.template)
+        except Exception as detail:
+            print(detail)
 
-    @async
     def run(self):
         # Update widget in main thread
         try:
@@ -107,11 +106,11 @@ class Slideshow():
                             i = i + 1
                     else:
                         # You can only get here if you delete a file while in the loop
-                        print 'Page not found: ' + self.pageContent[i][0]
+                        print('Page not found: ' + self.pageContent[i][0])
             else:
-                print 'No pages found to load'
-        except Exception, detail:
-            print detail
+                print('No pages found to load')
+        except Exception as detail:
+            print(detail)
 
     @idle
     def updatePage(self, page):

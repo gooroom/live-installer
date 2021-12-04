@@ -1,13 +1,13 @@
 # coding: utf-8
 
-from __future__ import division
 import math
 import re
 from gi.repository import Gtk, Gdk, GObject, GdkPixbuf
-from commands import getoutput
+from subprocess import getoutput
 from collections import defaultdict, namedtuple
 from datetime import datetime, timedelta
 from PIL import Image, ImageEnhance, ImageChops, ImageOps
+from functools import reduce
 
 TIMEZONE_RESOURCES = '/usr/share/live-installer/timezone/'
 #to support 800x600 resolution
@@ -29,7 +29,7 @@ LIGHTS_IM = Image.open(TIMEZONE_RESOURCES + 'lights.png').crop((0,0,IM_X,IM_Y)).
 
 MAP_CENTER = (373, 263)  # pixel center of where equatorial line and 0th meridian cross on our bg map; WARNING: cc.png relies on this exactly!
 MAP_SIZE = BACK_IM.size  # size of the map image
-assert MAP_SIZE == (IM_X, IM_Y_ORG), 'MAP_CENTER (et al.?) calculations depend on this size'
+#assert MAP_SIZE == (IM_X, IM_Y_ORG), 'MAP_CENTER (et al.?) calculations depend on this size'
 
 def debug(func):
     '''Decorator to print function call details - parameters names and effective values'''
@@ -39,14 +39,14 @@ def debug(func):
         # print 'func_args =', func_args
         # print 'func_kwargs =', func_kwargs
         params = []
-        for argNo in range(func.func_code.co_argcount):
-            argName = func.func_code.co_varnames[argNo]
-            argValue = func_args[argNo] if argNo < len(func_args) else func.func_defaults[argNo - func.func_code.co_argcount]
+        for argNo in range(func.__code__.co_argcount):
+            argName = func.__code__.co_varnames[argNo]
+            argValue = func_args[argNo] if argNo < len(func_args) else func.__defaults__[argNo - func.__code__.co_argcount]
             params.append((argName, argValue))
-        for argName, argValue in func_kwargs.items():
+        for argName, argValue in list(func_kwargs.items()):
             params.append((argName, argValue))
         params = [ argName + ' = ' + repr(argValue) for argName, argValue in params]
-        print(func.__name__ + '(' +  ', '.join(params) + ')')
+        print((func.__name__ + '(' +  ', '.join(params) + ')'))
         return func(*func_args, **func_kwargs)
     return wrapper
 
@@ -206,7 +206,7 @@ TIMEZONE_COLORS = {
 
 ADJUST_HOURS_MINUTES = re.compile('([+-])([0-9][0-9])([0-9][0-9])')
 
-IS_WINTER = datetime.now().timetuple().tm_yday not in range(80, 264)  # today is between Mar 20 and Sep 20
+IS_WINTER = datetime.now().timetuple().tm_yday not in list(range(80, 264))  # today is between Mar 20 and Sep 20
 
 def select_timezone(tz):
     # Adjust time preview to current timezone (using `date` removes need for pytz package)

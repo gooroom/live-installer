@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from installer import InstallerEngine, Setup, NON_LATIN_KB_LAYOUTS
 from slideshow import Slideshow
@@ -10,7 +10,7 @@ from widgets import PictureChooserButton
 import gettext
 import os
 import re
-import commands
+import subprocess
 import sys
 import PIL
 import threading
@@ -29,7 +29,7 @@ gettext.install("live-installer", "/usr/share/gooroom/locale")
 LOADING_ANIMATION = '/usr/share/live-installer/loading.gif'
 
 # Used as a decorator to run things in the background
-def async(func):
+async def func():
     def wrapper(*args, **kwargs):
         thread = threading.Thread(target=func, args=args, kwargs=kwargs)
         thread.daemon = True
@@ -86,22 +86,18 @@ class InstallerWindow:
         # Wizard pages
         (self.PAGE_LANGUAGE,
          self.PAGE_PARTITIONS,
-         self.PAGE_USER,
-         self.PAGE_ADVANCED,
          self.PAGE_KEYBOARD,
          self.PAGE_OVERVIEW,
          self.PAGE_INSTALL,
          self.PAGE_TIMEZONE,
          self.PAGE_CUSTOMWARNING,
-         self.PAGE_CUSTOMPAUSED) = range(10)
-        self.wizard_pages = range(10)
+         self.PAGE_CUSTOMPAUSED) = list(range(8))
+        self.wizard_pages = list(range(8))
         self.wizard_pages[self.PAGE_LANGUAGE] = WizardPage(_("Language"), "locales.png")
         self.wizard_pages[self.PAGE_TIMEZONE] = WizardPage(_("Timezone"), "time.png")
         self.wizard_pages[self.PAGE_KEYBOARD] = WizardPage(_("Keyboard layout"), "keyboard.png")
-        self.wizard_pages[self.PAGE_USER] = WizardPage(_("User info"), "user.png")
         self.wizard_pages[self.PAGE_PARTITIONS] = WizardPage(_("Partitioning"), "hdd.svg")
         self.wizard_pages[self.PAGE_CUSTOMWARNING] = WizardPage(_("Please make sure you wish to manage partitions manually"), "hdd.svg")
-        self.wizard_pages[self.PAGE_ADVANCED] = WizardPage(_("Advanced options"), "advanced.png")
         self.wizard_pages[self.PAGE_OVERVIEW] = WizardPage(_("Summary"), "summary.png")
         self.wizard_pages[self.PAGE_INSTALL] = WizardPage(_("Installing Gooroom Platform"), "install.png")
         self.wizard_pages[self.PAGE_CUSTOMPAUSED] = WizardPage(_("Installation paused: please finish the custom installation"), "install.png")
@@ -122,41 +118,6 @@ class InstallerWindow:
         self.builder.get_object("treeview_language_list").append_column(self.country_column)
 
         self.builder.get_object("treeview_language_list").connect("cursor-changed", self.assign_language)
-
-        '''
-        # build user info page
-        os.system("convert /usr/share/pixmaps/faces/7_penguin.png -resize x96 /tmp/live-installer-face.png")
-
-        pic_box = self.builder.get_object("hbox8")
-        self.face_button = PictureChooserButton(num_cols=4, button_picture_size=96, menu_pictures_size=64)
-        self.face_button.set_alignment(0.0, 0.5)
-        self.face_photo_menuitem = Gtk.MenuItem(_("Take a photo..."))
-        self.face_photo_menuitem.connect('activate', self._on_face_take_picture_button_clicked)
-        self.face_browse_menuitem = Gtk.MenuItem(_("Browse for more pictures..."))
-        self.face_browse_menuitem.connect('activate', self._on_face_browse_menuitem_activated)
-
-        face_dirs = ["/usr/share/pixmaps/faces"]
-        for face_dir in face_dirs:
-            if os.path.exists(face_dir):
-                pictures = sorted(os.listdir(face_dir))
-                for picture in pictures:
-                    path = os.path.join(face_dir, picture)
-                    self.face_button.add_picture(path, self._on_face_menuitem_activated)
-
-        self.face_button.add_separator()
-
-        # if no /dev/video*, we don't have a webcam
-        from glob import glob
-        webcam_detected = bool(len(glob('/dev/video*')))
-
-        if webcam_detected:
-            self.face_button.add_menuitem(self.face_photo_menuitem)
-        self.face_button.add_menuitem(self.face_browse_menuitem)
-
-        self.face_button.set_picture_from_file("/tmp/live-installer-face.png")
-
-        pic_box.pack_start(self.face_button, True, False, 6)
-        '''
 
         # build the language list
         self.build_lang_list()
@@ -185,14 +146,6 @@ class InstallerWindow:
             col = Gtk.TreeViewColumn("", text, markup=i)  # real title is set in i18n()
             self.builder.get_object("treeview_disks").append_column(col)
 
-        self.builder.get_object("entry_your_name").connect("notify::text", self.assign_realname)
-        self.builder.get_object("entry_username").connect("notify::text", self.assign_username)
-        self.builder.get_object("entry_hostname").connect("notify::text", self.assign_hostname)
-
-        # events for detecting password mismatch..
-        self.builder.get_object("entry_userpass1").connect("changed", self.assign_password)
-        self.builder.get_object("entry_userpass2").connect("changed", self.assign_password)
-
         # link the checkbutton to the combobox
         grub_check = self.builder.get_object("checkbutton_grub")
         grub_box = self.builder.get_object("combobox_grub")
@@ -202,12 +155,6 @@ class InstallerWindow:
         # Install Grub by default
         grub_check.set_active(True)
         grub_box.set_sensitive(True)
-
-        # encrypt_home
-        ecryptfs_check = self.builder.get_object("radiobutton_ecryptfs")
-        ecryptfs_check.connect("toggled", self.assign_ecryptfs_install)
-        encfs_check = self.builder.get_object("radiobutton_encfs")
-        encfs_check.connect("toggled", self.assign_encfs_install)
         
         # kb models
         cell = Gtk.CellRendererText()
@@ -246,19 +193,11 @@ class InstallerWindow:
 
         self.i18n()
 
-        # Pre-fill user details in debug mode
-        if __debug__:
-            self.builder.get_object("entry_your_name").set_text("John Boone")
-            self.builder.get_object("entry_username").set_text("john")
-            self.builder.get_object("entry_hostname").set_text("mars")
-            self.builder.get_object("entry_userpass1").set_text("dummy_password")
-            self.builder.get_object("entry_userpass2").set_text("dummy_password")
-
         # build partition list
         self.should_pulse = False
 
         # make sure we're on the right page (no pun.)
-        self.activate_page(0)
+        self.activate_page(self.PAGE_LANGUAGE)
 
         if(fullscreen):
             # dedicated installer mode thingum
@@ -325,7 +264,7 @@ class InstallerWindow:
         dialog.add_filter(filter)
 
         preview = Gtk.Image()
-        dialog.set_preview_widget(preview);
+        dialog.set_preview_widget(preview)
         dialog.connect("update-preview", self.update_preview_cb, preview)
         dialog.set_use_preview_label(False)
 
@@ -358,7 +297,7 @@ class InstallerWindow:
     def _on_face_menuitem_activated(self, path):
         if os.path.exists(path):
             os.system("cp %s /tmp/live-installer-face.png" % path)
-            print path
+            print(path)
             return True
 
     def _on_face_take_picture_button_clicked(self, menuitem):
@@ -394,16 +333,14 @@ class InstallerWindow:
 
     def i18n(self):
 
-        """
         if __debug__:
             self.window.set_title((_("%s Installer") % self.installer.get_distribution_name()) + ' (debug)')
         else:
             self.window.set_title((_("%s Installer") % self.installer.get_distribution_name()))
-        """
 
         self.language_column.set_title(_("Language"))
         self.country_column.set_title(_("Country"))
-        self.activate_page(0)
+        self.activate_page(self.PAGE_LANGUAGE)
 
         self.builder.get_object("button_cancel").set_label(_("Cancel"))
         self.builder.get_object("button_ok").set_label(_("OK"))
@@ -413,35 +350,6 @@ class InstallerWindow:
 
         self.builder.get_object("button_edit").set_label(_("Edit partitions"))
         self.builder.get_object("button_refresh").set_label(_("Refresh"))
-        #self.builder.get_object("button_custommount").set_label(_("Expert mode"))
-        self.label_your_name_help = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your full name.")
-        self.label_your_name_help2 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("You cannot use 'root' as your full name.")
-        self.label_your_name_help3 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Your full name must not be more than 32 characters.")
-        self.builder.get_object("label_your_name").set_markup("<b>%s</b>" % _("Your full name"))
-        self.builder.get_object("label_your_name_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your full name."))
-        self.label_username_help = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This is the name you will use to log in to your computer.")
-        self.label_username_help2 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It's recommended at least 1 to 32 letters which starts with lowcase alphabet and combined of lowcase alphabets, numbers and special character(-).")
-        self.label_username_help3 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("You cannot use 'root' as user name.")
-        self.label_username_help4 = "<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("User name must not be more than 32 characters.")
-        self.builder.get_object("label_username").set_markup("<b>%s</b>" % _("Your username"))
-        self.builder.get_object("label_username_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This is the name you will use to log in to your computer."))
-        self.builder.get_object("label_choose_pass").set_markup("<b>%s</b>" % _("Your password"))
-        self.builder.get_object("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your password twice to ensure it is correct."))
-        self.builder.get_object("label_hostname").set_markup("<b>%s</b>" % _("Hostname"))
-        self.builder.get_object("label_hostname_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This hostname will be the computer's name on the network."))
-        '''
-        self.builder.get_object("label_autologin").set_markup("<b>%s</b>" % _("Automatic login"))
-        self.builder.get_object("label_autologin_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("If enabled, the login screen is skipped when the system starts, and you are signed into your desktop session automatically."))
-        self.builder.get_object("checkbutton_autologin").set_label(_("Log in automatically"))
-        self.builder.get_object("checkbutton_autologin").connect("toggled", self.assign_autologin)
-
-        self.builder.get_object("face_label").set_markup("<b>%s</b>" % _("Your picture"))
-        self.builder.get_object("face_description").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("This picture represents your user account. It is used in the login screen and a few other places."))
-
-        self.face_button.set_tooltip_text(_("Click to change your picture"))
-        self.face_photo_menuitem.set_label(_("Take a photo..."))
-        self.face_browse_menuitem.set_label(_("Browse for more pictures..."))
-        '''
 
         # timezones
         self.builder.get_object("label_timezones").set_label(_("Selected timezone:"))
@@ -450,12 +358,6 @@ class InstallerWindow:
         self.builder.get_object("label_grub").set_markup("<b>%s</b>" % _("Bootloader"))
         self.builder.get_object("checkbutton_grub").set_label(_("Install GRUB"))
         self.builder.get_object("label_grub_help").set_label(_("GRUB is a bootloader used to load the Linux kernel."))
-
-        # encrypt home
-        self.builder.get_object("label_encrypt_home").set_markup("<b>%s</b>" % _("Encrypt home"))
-        self.builder.get_object("radiobutton_ecryptfs").set_label(_("Ecryptfs (Kernel Level Encryption for Gooroom Platform recommendations)"))
-        self.builder.get_object("radiobutton_encfs").set_label(_("Encfs (User Level Encryption for advanced users)"))
-        self.builder.get_object("label_encfs").set_markup("<b>%s</b>" % _("Note: Because encfs encryption can cause unexpected errors,\n Installation is not recommended except for research purpose to verify the encryption function.\n"))
 
         # keyboard page
         self.builder.get_object("label_test_kb").set_label(_("Use this box to test your keyboard layout."))
@@ -491,41 +393,6 @@ class InstallerWindow:
         self.column11.set_title(_("Variant"))
         self.column12.set_title(_("Overview"))
 
-    def assign_realname(self, entry, prop):
-        self.setup.real_name = entry.props.text
-        # Try to set the username (doesn't matter if it fails)
-        try:
-            text = entry.props.text.strip().lower()
-            if " " in entry.props.text:
-                elements = text.split()
-                text = elements[0]
-            self.setup.username = text
-            self.builder.get_object("entry_username").set_text(text)
-        except:
-            pass
-
-        if (self.setup.real_name == 'root'):
-            self.builder.get_object("label_your_name_help").set_markup(self.     label_your_name_help2)
-        elif (len(self.setup.real_name) > 32):
-            self.builder.get_object("label_your_name_help").set_markup(self.     label_your_name_help3)
-        else:
-            self.builder.get_object("label_your_name_help").set_markup(self.     label_your_name_help)
-
-
-        self.setup.print_setup()
-
-    def assign_username(self, entry, prop):
-        self.setup.username = entry.props.text
-        if not re.match(r'^[a-z][-a-z0-9]*$', self.setup.username):
-            self.builder.get_object("label_username_help").set_markup(self.label_username_help2)
-        elif (self.setup.username == 'root'):
-            self.builder.get_object("label_username_help").set_markup(self.label_username_help3)
-        elif (len(self.setup.username) > 32):
-            self.builder.get_object("label_username_help").set_markup(self.label_username_help4)
-        else:
-            self.builder.get_object("label_username_help").set_markup(self.label_username_help)
-        self.setup.print_setup()
-
     def assign_hostname(self, entry, prop):
         self.setup.hostname = entry.props.text
         self.setup.print_setup()
@@ -544,7 +411,7 @@ class InstallerWindow:
 
         # Try to find out where we're located...
         try:
-            from urllib import urlopen
+            from urllib.request import urlopen
         except ImportError:  # py3
             from urllib.request import urlopen
         try:
@@ -564,7 +431,7 @@ class InstallerWindow:
         iso_standard = "3166"
         if os.path.exists("/usr/share/xml/iso-codes/iso_3166-1.xml"):
             iso_standard = "3166-1"
-        for line in commands.getoutput("isoquery --iso %s | cut -f1,4-" % iso_standard).split('\n'):
+        for line in subprocess.getoutput("isoquery --iso %s | cut -f1,4-" % iso_standard).split('\n'):
             ccode, cname = line.split(None, 1)
             countries[ccode] = cname
 
@@ -573,15 +440,15 @@ class InstallerWindow:
         iso_standard = "639"
         if os.path.exists("/usr/share/xml/iso-codes/iso_639-2.xml"):
             iso_standard = "639-2"
-        for line in commands.getoutput("isoquery --iso %s | cut -f3,4-" % iso_standard).split('\n'):
+        for line in subprocess.getoutput("isoquery --iso %s | cut -f3,4-" % iso_standard).split('\n'):
             cols = line.split(None, 1)
             if len(cols) > 1:
                 name = cols[1].replace(";", ",")
                 languages[cols[0]] = name
-        for line in commands.getoutput("isoquery --iso %s | cut -f1,4-" % iso_standard).split('\n'):
+        for line in subprocess.getoutput("isoquery --iso %s | cut -f1,4-" % iso_standard).split('\n'):
             cols = line.split(None, 1)
             if len(cols) > 1:
-                if cols[0] not in languages.keys():
+                if cols[0] not in list(languages.keys()):
                     name = cols[1].replace(";", ",")
                     languages[cols[0]] = name
 
@@ -591,7 +458,7 @@ class InstallerWindow:
         flag_path = lambda ccode: self.resource_dir + '/flags/16/' + ccode.lower() + '.png'
         from utils import memoize
         flag = memoize(lambda ccode: GdkPixbuf.Pixbuf.new_from_file(flag_path(ccode)))
-        for locale in commands.getoutput("awk -F'[@ .]' '/UTF-8/{ print $1 }' /usr/share/i18n/SUPPORTED | uniq").split('\n'):
+        for locale in subprocess.getoutput("awk -F'[@ .]' '/UTF-8/{ print $1 }' /usr/share/i18n/SUPPORTED | uniq").split('\n'):
             if '_' in locale:
                 lang, ccode = locale.split('_')
                 language = lang
@@ -652,7 +519,7 @@ class InstallerWindow:
         ''' Do some xml kung-fu and load the keyboard stuffs '''
         # Determine the layouts in use
         (keyboard_geom,
-         self.setup.keyboard_layout) = commands.getoutput("setxkbmap -query | awk '/^(model|layout)/{print $2}'").split()
+         self.setup.keyboard_layout) = subprocess.getoutput("setxkbmap -query | awk '/^(model|layout)/{print $2}'").split()
         # Build the models
         from collections import defaultdict
         def _ListStore_factory():
@@ -708,7 +575,7 @@ class InstallerWindow:
         ''' Called whenever someone updates the language '''
         model = treeview.get_model()
         selection = treeview.get_selection()
-        if selection.count_selected_rows > 0:
+        if selection.count_selected_rows:
             (model, iter) = selection.get_selected()
             if iter is not None:
                 self.setup.language = model.get_value(iter, 3)
@@ -741,16 +608,6 @@ class InstallerWindow:
             row = model[active]
             self.setup.grub_device = row[0]
         self.setup.print_setup()
-
-    def assign_ecryptfs_install(self, radiobutton, data=None):
-        if radiobutton.get_active():
-            self.setup.ecryptfs = True
-            self.setup.encfs = False
-
-    def assign_encfs_install(self, radiobutton, data=None):
-        if radiobutton.get_active():
-            self.setup.encfs = True
-            self.setup.ecryptfs = False
 
     def assign_keyboard_model(self, combobox):
         ''' Called whenever someone updates the keyboard model '''
@@ -818,68 +675,10 @@ class InstallerWindow:
         variant = self.setup.keyboard_variant.split(",")[-1]
         if variant == "":
             variant = None
-        print("python /usr/lib/live-installer/frontend/generate_keyboard_layout.py %s %s %s" % (layout, variant, filename))
-        os.system("python /usr/lib/live-installer/frontend/generate_keyboard_layout.py %s %s %s" % (layout, variant, filename))
+        print("python3 /usr/lib/live-installer/frontend/generate_keyboard_layout.py {} {} {}".format(layout, variant, filename))
+        os.system("python3 /usr/lib/live-installer/frontend/generate_keyboard_layout.py {} {} {}".format(layout, variant, filename))
         self.builder.get_object("image_keyboard").set_from_file(filename)
         return False
-
-    def check_password(self, passwd):
-        """ check password """
-
-        #length
-        if not passwd or len(passwd) < 8:
-            return (-1, _("Password is short."))
-
-        char_be = False
-        digit_be = False
-        special_be = False
-
-        password_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&()'
-
-        for p in passwd:
-            #valid char
-            if not p in password_chars:
-                return (-1, _("Invalid character is in password."))
-
-            #security
-            ord_p = ord(p)
-            if (ord_p >=65  and ord_p <= 90) or (ord_p >= 97 and ord_p <= 122):
-                char_be = True
-            elif ord_p >= 48 and ord_p <= 57:
-                digit_be = True
-            else:
-                special_be = True
-
-        if char_be and digit_be and special_be:
-            #success
-            return (0, None)
-        else:
-            return (-1, _("Password security level is low."))
-
-    def assign_password(self, widget):
-        ''' Someone typed into the entry '''
-        self.setup.password1 = self.builder.get_object("entry_userpass1").get_text()
-        self.setup.password2 = self.builder.get_object("entry_userpass2").get_text()
-        self.builder.get_object("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("Please enter your password twice to ensure it is correct."))
-        if(self.setup.password1 == "" and self.setup.password2 == ""):
-            self.builder.get_object("image_mismatch").hide()
-            self.builder.get_object("label_mismatch").hide()
-        else:
-            self.builder.get_object("image_mismatch").show()
-            self.builder.get_object("label_mismatch").show()
-            if(self.setup.password1 != self.setup.password2):
-                self.builder.get_object("image_mismatch").set_from_stock(Gtk.STOCK_NO, Gtk.IconSize.BUTTON)
-                self.builder.get_object("label_mismatch").set_label(_("Passwords do not match."))
-            else:
-                p_res, err_msg = self.check_password(self.setup.password1)
-                if p_res == 0:
-                    self.builder.get_object("image_mismatch").set_from_stock(Gtk.STOCK_OK, Gtk.IconSize.BUTTON)
-                    self.builder.get_object("label_mismatch").set_label(_("Passwords match."))
-                else:
-                    self.builder.get_object("image_mismatch").set_from_stock(Gtk.STOCK_OK, Gtk.IconSize.BUTTON)
-                    self.builder.get_object("label_mismatch").set_label(err_msg)
-                    self.builder.get_object("label_pass_help").set_markup("<span fgcolor='#3C3C3C'><sub><i>%s</i></sub></span>" % _("It should be more than 8 letters as a combination of alphabets, numbers and special characters(!@#$%^&amp;())."))
-        self.setup.print_setup()
 
     def activate_page(self, index):
         help_text = _(self.wizard_pages[index].help_text)
@@ -889,10 +688,20 @@ class InstallerWindow:
         # TODO: move other page-depended actions from the wizard_cb into here below
         if index == self.PAGE_LANGUAGE:
             self.builder.get_object("button_back").set_sensitive(False)
-        if index == self.PAGE_PARTITIONS:
+        elif index == self.PAGE_PARTITIONS:
             self.setup.skip_mount = False
-        if index == self.PAGE_CUSTOMWARNING:
+        elif index == self.PAGE_CUSTOMWARNING:
             self.setup.skip_mount = True
+        elif index ==  self.PAGE_INSTALL:
+            import threading
+            thr1 = threading.Thread(target=self.do_install)
+            thr1.daemon = True
+            thr1.start()
+
+            slideshow = Slideshow(self.slideshow_browser, self.slideshow_path)
+            thr2 = threading.Thread(target=slideshow.run)
+            thr2.daemon = True
+            thr2.start()
 
     def wizard_cb(self, widget, goback, data=None):
         ''' wizard buttons '''
@@ -936,73 +745,9 @@ class InstallerWindow:
                     iter = model.iter_next(iter)
                 self.activate_page(self.PAGE_KEYBOARD)
             elif(sel == self.PAGE_KEYBOARD):
-                self.activate_page(self.PAGE_USER)
-                self.builder.get_object("entry_your_name").grab_focus()
-            elif(sel == self.PAGE_USER):
-                errorFound = False
-                errorMessage = ""
-
-                p_res, err_msg = self.check_password(self.setup.password1)
-
-                if(self.setup.real_name is None or self.setup.real_name == ""):
-                    errorFound = True
-                    errorMessage = _("Please provide your full name.")
-                elif(self.setup.real_name == 'root'):
-                    errorFound = True
-                    errorMessage = _("Your full name is invalid.")
-                elif(len(self.setup.real_name) > 32):
-                    errorFound = True
-                    errorMessage = _("Your full name is invalid.")
-                elif(self.setup.username is None or self.setup.username == ""):
-                    errorFound = True
-                    errorMessage = _("Please provide a username.")
-                elif not re.match(r'^[a-z][-a-z0-9]*$', self.setup.username):
-                    errorFound = True
-                    errorMessage = _("UserId is invalid.")
-                elif (self.setup.username == 'root'):
-                    errorFound = True
-                    errorMessage = _("UserId is invalid.")
-                elif (len(self.setup.username)> 32):
-                    errorFound = True
-                    errorMessage = _("UserId is invalid.")
-                elif(self.setup.password1 is None or self.setup.password1 == ""):
-                    errorFound = True
-                    errorMessage = _("Please provide a password for your user account.")
-                elif(self.setup.password1 != self.setup.password2):
-                    errorFound = True
-                    errorMessage = _("Your passwords do not match.")
-                elif p_res != 0:
-                    errorFound = True
-                    errorMessage = err_msg
-                elif(self.setup.hostname is None or self.setup.hostname == ""):
-                    errorFound = True
-                    errorMessage = _("Please provide a hostname.")
-                else:
-                    for char in self.setup.username:
-                        if(char.isupper()):
-                            errorFound = True
-                            errorMessage = _("Your username must be lower case.")
-                            break
-                        elif(char.isspace()):
-                            errorFound = True
-                            errorMessage = _("Your username may not contain whitespace characters.")
-
-                    for char in self.setup.hostname:
-                        if(char.isupper()):
-                            errorFound = True
-                            errorMessage = _("The hostname must be lower case.")
-                            break
-                        elif(char.isspace()):
-                            errorFound = True
-                            errorMessage = _("The hostname may not contain whitespace characters.")
-
-                if (errorFound):
-                    WarningDialog(_("Installation Tool"), errorMessage)
-                else:
-                    self.activate_page(self.PAGE_PARTITIONS)
-                    #to prevent duplication of partition
-                    if not self.PARTITIONING_DONE:
-                        partitioning.build_partitions(self)
+                if not self.PARTITIONING_DONE:
+                    partitioning.build_partitions(self)
+                self.activate_page(self.PAGE_PARTITIONS)
             elif(sel == self.PAGE_PARTITIONS):
                 model = self.builder.get_object("treeview_disks").get_model()
 
@@ -1044,40 +789,23 @@ class InstallerWindow:
                         ErrorDialog(_("Installation Tool"), "<b>%s</b>" % _("Please select an EFI partition."),_("An EFI system partition is needed with the following requirements:\n\n - Mount point: /boot/efi\n - Partition flags: Bootable\n - Size: Larger than 100MB\n - Format: vfat or fat32\n\nTo ensure compatibility with Windows we recommend you use the first partition of the disk as the EFI system partition.\n "))
                         return
 
-                partitioning.build_grub_partitions()
-                self.activate_page(self.PAGE_ADVANCED)
-
-            elif(sel == self.PAGE_CUSTOMWARNING):
-                partitioning.build_grub_partitions()
-                self.activate_page(self.PAGE_ADVANCED)
-            elif(sel == self.PAGE_ADVANCED):
                 self.activate_page(self.PAGE_OVERVIEW)
                 self.show_overview()
                 self.builder.get_object("treeview_overview").expand_all()
-                self.builder.get_object("button_next").set_label(_("Install"))
+                self.builder.get_object("button_next").set_label(_("Install")) 
+
             elif(sel == self.PAGE_OVERVIEW):
-                self.activate_page(self.PAGE_INSTALL)
                 self.builder.get_object("button_next").set_sensitive(False)
                 self.builder.get_object("button_back").set_sensitive(False)
-                self.builder.get_object("button_quit").set_sensitive(False)
-                self.do_install()
-                slideshow = Slideshow(self.slideshow_browser, self.slideshow_path)
-                slideshow.run()
-            elif(sel == self.PAGE_CUSTOMPAUSED):
                 self.activate_page(self.PAGE_INSTALL)
+            elif(sel == self.PAGE_CUSTOMPAUSED):
                 self.builder.get_object("button_next").hide()
+                self.activate_page(self.PAGE_INSTALL)
                 self.paused = False
         else:
             self.builder.get_object("button_back").set_sensitive(True)
             if(sel == self.PAGE_OVERVIEW):
                 self.builder.get_object("button_next").set_label(_("Next"))
-                self.activate_page(self.PAGE_ADVANCED)
-            elif(sel == self.PAGE_ADVANCED):
-                if (self.setup.skip_mount):
-                    self.activate_page(self.PAGE_CUSTOMWARNING)
-                else:
-                    self.activate_page(self.PAGE_PARTITIONS)
-            elif(sel == self.PAGE_CUSTOMWARNING):
                 self.activate_page(self.PAGE_PARTITIONS)
             elif(sel == self.PAGE_PARTITIONS):
                 #to prevent duplication of partition
@@ -1087,8 +815,6 @@ class InstallerWindow:
                         found_root_partition = True
                 if found_root_partition:
                     self.PARTITIONING_DONE = True
-                self.activate_page(self.PAGE_USER)
-            elif(sel == self.PAGE_USER):
                 self.activate_page(self.PAGE_KEYBOARD)
             elif(sel == self.PAGE_KEYBOARD):
                 self.activate_page(self.PAGE_TIMEZONE)
@@ -1105,14 +831,8 @@ class InstallerWindow:
         model.append(top, (_("Keyboard layout: ") +
                            "<b>%s - %s %s</b>" % (self.setup.keyboard_model_description, self.setup.keyboard_layout_description,
                                                   '(%s)' % self.setup.keyboard_variant_description if self.setup.keyboard_variant_description else ''),))
-        top = model.append(None, (_("User settings"),))
-        model.append(top, (_("Real name: ") + bold(self.setup.real_name),))
-        model.append(top, (_("Username: ") + bold(self.setup.username),))
-        #model.append(top, (_("Automatic login: ") + bold(_("enabled") if self.setup.autologin else _("disabled")),))
         top = model.append(None, (_("System settings"),))
         model.append(top, (_("Hostname: ") + bold(self.setup.hostname),))
-        top = model.append(None, (_("Encrypted home settings"),))
-        model.append(top, (_("Encrypted home: ") + bold(_("ecryptfs (Kernel Level Encryption)") if self.setup.ecryptfs else _("encfs (User Level Encryption)")),))
         top = model.append(None, (_("Filesystem operations"),))
         model.append(top, (bold(_("Install bootloader on %s") % self.setup.grub_device) if self.setup.grub_device else _("Do not install bootloader"),))
         if self.setup.skip_mount:
@@ -1149,14 +869,13 @@ class InstallerWindow:
         MessageDialog(_("Installation paused"), _("The installation is now paused. Please read the instructions on the page carefully before clicking Forward to finish the installation."))
         self.builder.get_object("button_next").set_sensitive(True)
 
-    @async
     def do_install(self):
-        print " ## INSTALLATION "
+        print(" ## INSTALLATION ")
         ''' Actually perform the installation .. '''
         inst = self.installer
 
         if __debug__:
-            print " ## DEBUG MODE - INSTALLATION PROCESS NOT LAUNCHED"
+            print(" ## DEBUG MODE - INSTALLATION PROCESS NOT LAUNCHED")
             time.sleep(200)
             Gtk.main_quit()
             sys.exit(0)
@@ -1172,8 +891,8 @@ class InstallerWindow:
 
         try:
             inst.init_install(self.setup)
-        except Exception, detail1:
-            print detail1
+        except Exception as detail1:
+            print(detail1)
             do_try_finish_install = False
             self.show_error_dialog(_("Installation error"), str(detail1))
 
@@ -1190,8 +909,8 @@ class InstallerWindow:
 
             try:
                 inst.finish_install(self.setup)
-            except Exception, detail1:
-                print detail1
+            except Exception as detail1:
+                print(detail1)
                 self.show_error_dialog(_("Installation error"), str(detail1))
 
             # show a message dialog thingum
@@ -1207,7 +926,7 @@ class InstallerWindow:
             while(self.showing_last_dialog):
                 time.sleep(0.1)
 
-            print " ## INSTALLATION COMPLETE "
+            print(" ## INSTALLATION COMPLETE ")
 
         Gtk.main_quit()
         sys.exit(0)
