@@ -1,3 +1,31 @@
+live-installer (2023.05.21+grm3u1) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [b24f3281] Released Gooroom 3.3 Version
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Sun, 21 May 2023 12:42:23 +0900
+
+live-installer (2022.09.22+grm3u1) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [f40d28e4] Released Gooroom 3.2 Version
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 22 Sep 2022 20:00:59 +0900
+
+live-installer (2022.05.27+grm3u1) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [7238d5ba] Released Gooroom 3.1 Version #2
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Fri, 27 May 2022 06:01:25 +0900
+
+live-installer (2022.05.26+grm3u1) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [5d96a8dd] Released Gooroom 3.1 Version
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 26 May 2022 19:08:40 +0900
+
 live-installer (2021.12.04+grm3u1) unstable; urgency=medium
 
   [ boyeon.choi ]
