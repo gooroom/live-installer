@@ -240,19 +240,45 @@ class PartitionSetup(Gtk.TreeStore):
                 print("      - Found the disk...")
             except Exception as detail:
                 print("      - Found an issue while looking for the disk: %s" % detail)
+                """
                 from frontend.gtk_interface import QuestionDialog
                 dialog = QuestionDialog(_("Installation Tool"),
                                         _("No partition table was found on the hard drive: %s. Do you want the installer to create a set of partitions for you? Note: This will ERASE ALL DATA present on this disk.") % disk_description,
                                         None, installer.window)
+                """
+                dialog = QuestionDialogWithCheckbox(_("Installation Tool"),
+                                    _("No partition table was found on the hard drive: %s. Do you want the installer to create a set of partitions for you? Note: This will ERASE ALL DATA present on this disk.") % disk_description,
+                                    installer.window)
+
+                response = dialog.run()
+                """
+                if response == Gtk.ResponseType.YES:
+                    if is_backup:
+                        pass
+                    else:
+                        # Format without assigning mount points
+                        pass
+                elif response == Gtk.ResponseType.NO:
+                    # User said No
+                    pass
+                """
+                if response == Gtk.ResponseType.NO:
+                    dialog.destroy ()
+                    dialog = None
+
                 if not dialog: continue  # the user said No, skip this disk
+
                 try:
+                    is_backup = dialog.checkbox.get_active()
+                    dialog.destroy ()
+
                     installer.window.get_window().set_cursor(Gdk.Cursor.new(Gdk.CursorType.WATCH))
                     print("Performing a full disk format")
                     if not already_done_full_disk_format:
-                        assign_mount_format = self.full_disk_format(disk_device)
+                        assign_mount_format = self.full_disk_format(disk_device ,is_backup)
                         already_done_full_disk_format = True
                     else:
-                        self.full_disk_format(disk_device) # Format but don't assign mount points
+                        self.full_disk_format(disk_device, is_backup) # Format but don't assign mount points
                     installer.window.get_window().set_cursor(None)
                     print("Done full disk format")
                     disk = parted.Disk(disk_device)
@@ -324,12 +350,14 @@ class PartitionSetup(Gtk.TreeStore):
         else:
             return ""
 
-    def full_disk_format(self, device):
+    def full_disk_format(self, device, is_backup):
         # Create a default partition set up
         disk_label = ('gpt' if device.getLength('B') > 2**32*.9 * device.sectorSize  # size of disk > ~2TB
                                or installer.setup.gptonefi
                             else 'msdos')
-        separate_home_partition = device.getLength('GB') > 61
+        if is_backup: separate_home_partition = (device.getLength('GB')*0.80 > 61)
+        else: separate_home_partition = (device.getLength('GB') > 61)
+
         mkpart = (
             # (condition, mount_as, format_as, mkfs command, size_mb)
             # EFI
@@ -337,9 +365,11 @@ class PartitionSetup(Gtk.TreeStore):
             # swap - equal to RAM for hibernate to work well (but capped at ~8GB)
             (True, SWAP_MOUNT_POINT, 'swap', 'mkswap {}', min(8800, int(round(1.1/1024 * int(getoutput("awk '/^MemTotal/{ print $2 }' /proc/meminfo")), -2)))),
             # root
-            (True, '/', 'ext4', 'mkfs.ext4 -F {}', 30000 if separate_home_partition else 0),
+            (True, '/', 'ext4', 'mkfs.ext4 -F {}', 30000 if separate_home_partition else (1 if is_backup else 0)),
             # home
-            (separate_home_partition, '/home', 'ext4', 'mkfs.ext4 -F {}', 0),
+            (separate_home_partition, '/home', 'ext4', 'mkfs.ext4 -F {}', 1 if is_backup else 0),
+            #BACKUP
+            (is_backup, '', 'ext4', 'mkfs.ext4 -F {}', 0),
         )
         run_parted = lambda cmd: os.system('parted --script --align optimal {} {} ; sync'.format(device.path, cmd))
         run_parted('mklabel ' + disk_label)
@@ -350,14 +380,20 @@ class PartitionSetup(Gtk.TreeStore):
                 partition_number = partition_number + 1
                 mkfs = partition[3]
                 size_mb = partition[4]
-                end = '{}MB'.format(start_mb + size_mb) if size_mb else '100%'
+                if size_mb == 1: end = '78%'
+                elif size_mb: end = '{}MB'.format(start_mb + size_mb)
+                else:
+                    end = '100%'
                 mkpart_cmd = 'mkpart primary {}MB {}'.format(start_mb, end)
                 print(mkpart_cmd)
                 run_parted(mkpart_cmd)
                 mkfs = mkfs.format("%s%d" % (device.path, partition_number))
                 print(mkfs)
                 os.system(mkfs)
+                if is_backup and end == '100%':
+                    os.system ("tune2fs -L GRM_BAKCUP %s%d" % (device.path, partition_number))
                 start_mb += size_mb + 1
+                if end == '78%': start_mb = device.getLength('MB')*0.8
         if installer.setup.gptonefi:
             run_parted('set 1 boot on')
         return ((i[1], i[2]) for i in mkpart if i[0])
@@ -568,3 +604,30 @@ class PartitionDialog(object):
         else:
             response_is_ok = False
         return response_is_ok, mount_as, format_as
+
+
+class QuestionDialogWithCheckbox(Gtk.Dialog):
+    import sys
+
+    def __init__(self, title, message, parent=None):
+        super().__init__(title=title, parent=parent, flags=0)
+
+        self.set_default_size(600, 200)
+        self.get_content_area().set_margin_start (20)
+        self.get_content_area().set_margin_end (20)
+        self.get_content_area().set_margin_bottom (20)
+        self.get_content_area().set_margin_top (20)
+
+        label = Gtk.Label(label=message)
+        label.set_line_wrap (True)
+        label.set_margin_bottom (35)
+        self.get_content_area().add(label)
+
+        self.checkbox = Gtk.CheckButton(label=_("Creating partitions for system terminal backup."))
+        self.checkbox.set_active (True)
+        self.get_content_area().add(self.checkbox)
+
+        self.add_button(Gtk.STOCK_YES, Gtk.ResponseType.YES)
+        self.add_button(Gtk.STOCK_NO, Gtk.ResponseType.NO)
+
+        self.show_all()

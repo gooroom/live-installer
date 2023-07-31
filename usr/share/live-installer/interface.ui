@@ -2,6 +2,28 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.18"/>
+  <object class="GtkListStore" id="model2">
+    <columns>
+      <!-- column-name gchararray -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">ext4 filesystem</col>
+      </row>
+    </data>
+  </object>
+  <object class="GtkListStore" id="model3">
+    <columns>
+      <!-- column-name gchararray -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">/dev/sda</col>
+      </row>
+    </data>
+  </object>
   <object class="GtkWindow" id="main_window">
     <property name="can-focus">False</property>
     <property name="border-width">15</property>
@@ -280,6 +302,21 @@
                     <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_desc_backup">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="margin-top">15</property>
+                    <property name="label" translatable="yes" context="&lt;파티션 편집&gt;을 실행하여 시스템 단말 백업을 위한 백업 파티션 생성 또는 수정이 가능합니다.&#10;(파티션 필수값: 레이블=BACKUP)">You can run &lt;Edit partition&gt; to create or modify a backup partition for a system device backup.
+(Partition Required: Label=GRM_BACKUP)</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>
@@ -1146,17 +1183,6 @@
       </object>
     </child>
   </object>
-  <object class="GtkListStore" id="model2">
-    <columns>
-      <!-- column-name gchararray -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0" translatable="yes">ext4 filesystem</col>
-      </row>
-    </data>
-  </object>
   <object class="GtkDialog" id="dialog">
     <property name="can-focus">False</property>
     <property name="border-width">5</property>
@@ -1327,17 +1353,6 @@
       <action-widget response="-6">button_cancel</action-widget>
       <action-widget response="-5">button_ok</action-widget>
     </action-widgets>
-  </object>
-  <object class="GtkListStore" id="model3">
-    <columns>
-      <!-- column-name gchararray -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0" translatable="yes">/dev/sda</col>
-      </row>
-    </data>
   </object>
   <object class="GtkWindow" id="progress_window">
     <property name="can-focus">False</property>
