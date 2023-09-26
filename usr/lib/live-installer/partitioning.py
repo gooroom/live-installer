@@ -391,7 +391,7 @@ class PartitionSetup(Gtk.TreeStore):
                 print(mkfs)
                 os.system(mkfs)
                 if is_backup and end == '100%':
-                    os.system ("tune2fs -L GRM_BAKCUP %s%d" % (device.path, partition_number))
+                    os.system ("tune2fs -L GRM_BACKUP %s%d" % (device.path, partition_number))
                 start_mb += size_mb + 1
                 if end == '78%': start_mb = device.getLength('MB')*0.8
         if installer.setup.gptonefi:

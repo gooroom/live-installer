@@ -168,12 +168,13 @@ class InstallerEngine:
             self.error_message(message=_("ERROR: Something is wrong with the installation medium! This is usually caused by burning tools which are not compatible with LMDE (YUMI or other multiboot tools). Please burn the ISO image to DVD/USB using a different tool."))
             return
 
+        os.system("umount --force /target/sys/firmware/efi/efivars")
         os.system("umount --force /target/dev/shm")
         os.system("umount --force /target/dev/pts")
         os.system("umount --force /target/dev/")
-        os.system("umount --force /target/sys/fs/fuse/connections")
         os.system("umount --force /target/sys/")
         os.system("umount --force /target/proc/")
+        os.system("umount --force /target/run/")
         os.system("umount --force /target/boot/efi")
         os.system("umount --force /target/recovery")
 
@@ -216,8 +217,13 @@ class InstallerEngine:
         os.system("mount --bind /dev/pts /target/dev/pts")
         os.system("mount --bind /sys/ /target/sys/")
         os.system("mount --bind /proc/ /target/proc/")
+        os.system("mount --bind /run/ /target/run/")
         os.system("mv /target/etc/resolv.conf /target/etc/resolv.conf.bk")
         os.system("cp -f /etc/resolv.conf /target/etc/resolv.conf")
+
+        if os.path.exists("/sys/firmware/efi/efivars"):
+            os.system("mkdir -p /target/sys/firmware/efi/efivars")
+            os.system("mount --bind /sys/firmware/efi/efivars /target/sys/firmware/efi/efivars")
 
         kernelversion= subprocess.check_output("uname -r", shell=True, universal_newlines=True)
         os.system("cp /run/live/medium/live/vmlinuz /target/boot/vmlinuz-%s" % kernelversion)
@@ -563,6 +569,10 @@ class InstallerEngine:
 
         # now unmount it
         print(" --> Unmounting partitions")
+
+        if os.path.exists("/target/sys/firmware/efi/efivars"):
+            os.system("umount --force /target/sys/firmware/efi/efivars")
+
         os.system("umount --force /target/dev/shm")
         os.system("umount --force /target/dev/pts")
         if setup.gptonefi:
@@ -572,13 +582,19 @@ class InstallerEngine:
         os.system("umount --force /target/sys/fs/fuse/connections")
         os.system("umount --force /target/sys/")
         os.system("umount --force /target/proc/")
+        os.system("umount --force /target/run/")
         os.system("rm -f /target/etc/resolv.conf")
         os.system("mv /target/etc/resolv.conf.bk /target/etc/resolv.conf")
         if(not setup.skip_mount):
             for partition in setup.partitions:
                 if(partition.mount_as is not None and partition.mount_as != "" and partition.mount_as != "/" and partition.mount_as != "swap"):
                     self.do_unmount("/target" + partition.mount_as)
-            self.do_unmount("/target")
+
+            # btrfs subvolumes are mounts, but will block unmounting /target. This will
+            # unmount the submounts also.
+            cmd = "umount -AR /target"
+            print("Unmounting the target root: '%s'" % cmd)
+            self.exec_cmd(cmd)
         self.do_unmount("/source")
 
         ## Recovery Mode
