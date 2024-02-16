@@ -254,7 +254,6 @@ class InstallerWindow:
                     dialog.set_preview_widget_active(True)
         except Exception:
             pass
-
     def _on_face_browse_menuitem_activated(self, menuitem):
         dialog = Gtk.FileChooserDialog(None, None, Gtk.FileChooserAction.OPEN, (_("Cancel"), Gtk.ResponseType.CANCEL, _("Open"), Gtk.ResponseType.OK))
 
@@ -290,7 +289,7 @@ class InstallerWindow:
             image.thumbnail((96, 96), PIL.Image.ANTIALIAS)
             face_path = "/tmp/live-installer-face.png"
             image.save(face_path, "png")
-            self.face_button.set_picture_from_file(face_path)
+#            self.face_button.set_picture_from_file(face_path)
 
         dialog.destroy()
 
@@ -306,7 +305,7 @@ class InstallerWindow:
             return  # Error, no webcam
         # Convert and resize the 7th frame (the webcam takes a few frames to "lighten up")
         os.system('convert /tmp/live-installer-face07.jpeg -crop 600x600+100+0 -resize 96x96 /tmp/live-installer-face.png')
-        self.face_button.set_picture_from_file("/tmp/live-installer-face.png")
+#        self.face_button.set_picture_from_file("/tmp/live-installer-face.png")
 
     def fix_text_wrap(self):
         while Gtk.events_pending():
