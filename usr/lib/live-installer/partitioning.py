@@ -216,7 +216,12 @@ class PartitionSetup(Gtk.TreeStore):
                         # convert size to manufacturer's size for show, e.g. in GB, not GiB!
                         unit_index = 'BKMGTPEZY'.index(size.upper()[-1])
                         l10n_unit = [_('B'), _('kB'), _('MB'), _('GB'), _('TB'), 'PB', 'EB', 'ZB', 'YB'][unit_index]
+
+                        if (int(float(size[:-1]) * (1024/1000)**unit_index) == 0):
+                            continue;
+
                         size = "%s %s" % (str(int(float(size[:-1]) * (1024/1000)**unit_index)), l10n_unit)
+
                         model = model.replace("\\x20", " ")
                         description = '{} ({})'.format(model.strip(), size)
                         if int(removable):
