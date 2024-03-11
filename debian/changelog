@@ -1,3 +1,17 @@
+live-installer (2024.03.11+grm4u1) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [d3b67d90] Released on gooroom-4.0
+  * [14f89474] Released on gooroom-4.0 #2
+
+  [ cjheo ]
+  * [32db0dab] Fixed Pylint Warnings
+
+  [ boyeon.choi ]
+  * [aa4940b7] Pass if the device's memory is 0
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Mon, 11 Mar 2024 12:09:22 +0900
+
 live-installer (2023.05.21+grm3u1) unstable; urgency=medium
 
   [ jongkyung.woo ]
