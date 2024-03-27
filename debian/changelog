@@ -1,3 +1,10 @@
+live-installer (2024.03.27+grm3u1) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [31d46531] Fixed to install the UEFI mode
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Wed, 27 Mar 2024 18:06:58 +0900
+
 live-installer (2023.09.26+grm3u1) unstable; urgency=medium
 
   [ jongkyung.woo ]
