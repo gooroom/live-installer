@@ -1,3 +1,10 @@
+live-installer (2024.04.30+grm3u1) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [d94bb702] Released Gooroom 3.5 Version
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Tue, 30 Apr 2024 18:44:59 +0900
+
 live-installer (2024.03.27+grm3u1) unstable; urgency=medium
 
   [ jongkyung.woo ]
