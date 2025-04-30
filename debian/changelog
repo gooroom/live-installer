@@ -1,3 +1,10 @@
+live-installer (2025.04.30+grm4u1) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [0ec46c91] Released gooroom 4.3
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Wed, 30 Apr 2025 17:33:01 +0900
+
 live-installer (2024.09.26+grm4u1) unstable; urgency=medium
 
   [ jongkyung.woo ]
