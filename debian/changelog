@@ -1,3 +1,14 @@
+live-installer (2026.02.20+grm5u1) gooroom-5.0-unstable; urgency=medium
+
+  [ Gooroom ]
+  * Rebased for Gooroom 5.0 (Debian Trixie)
+  * Removed sysv-rc dependency (not available in Trixie)
+  * Updated gir1.2-webkit2 from 4.0 to 4.1
+  * Modernized debian/control (debhelper-compat 13)
+  * Updated distribution version to 5.0
+
+ -- Gooroom <gooroom@gooroom.kr>  Fri, 20 Feb 2026 16:05:33 +0900
+
 live-installer (2025.09.17+grm4u1) unstable; urgency=medium
 
   [ jongkyung.woo ]

@@ -1,0 +1,3 @@
+# Gooroom local package
+live-installer source: latest-debian-changelog-entry-without-new-date
+live-installer source: unknown-field Original-Maintainer
