@@ -1,4 +1,4 @@
-live-installer (2026.02.20+grm5u1) gooroom-5.0-unstable; urgency=medium
+live-installer (2026.02.20+grm5~alpha1) gooroom-5.0-unstable; urgency=medium
 
   [ Gooroom ]
   * Rebased for Gooroom 5.0 (Debian Trixie)
