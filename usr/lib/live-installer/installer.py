@@ -616,7 +616,10 @@ class InstallerEngine:
     def do_run_in_chroot(self, command):
         command = command.replace('"', "'").strip()
         print("chroot /target/ /bin/sh -c \"%s\"" % command)
-        os.system("chroot /target/ /bin/sh -c \"%s\"" % command)
+        retval = os.system("chroot /target/ /bin/sh -c \"%s\"" % command)
+        if retval != 0:
+            print("WARNING: chroot command exited with %d: %s" % (retval, command))
+        return retval
 
     def do_configure_grub(self, our_total, our_current):
         self.update_progress(our_current, our_total, True, False, _("Configuring bootloader"))
