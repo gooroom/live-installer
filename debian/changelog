@@ -1,3 +1,9 @@
+live-installer (2026.02.20+grm5u1) gooroom-5.0; urgency=medium
+
+  * local package: Release for gooroom-5.0
+
+ -- jongkyung.woo <jkwoo@gooroom.kr>  Thu, 07 May 2026 15:35:39 +0900
+
 live-installer (2026.02.20+grm5~alpha1) gooroom-5.0-unstable; urgency=medium
 
   [ Gooroom ]

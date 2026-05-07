@@ -1,7 +1,8 @@
 Source: live-installer
 Section: admin
 Priority: optional
-Maintainer: gooroom <gooroom@gooroom.kr>
+Maintainer: Gooroom <gooroom@gooroom.kr>
+XSBC-Original-Maintainer: gooroom <gooroom@gooroom.kr>
 XSBC-Original-Maintainer: Clement Lefebvre <root@linuxmint.com>
 Build-Depends: debhelper-compat (= 13),
                python3,
