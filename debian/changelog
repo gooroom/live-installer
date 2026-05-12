@@ -1,3 +1,10 @@
+live-installer (2026.05.12+grm5u1) gooroom-5.0; urgency=medium
+
+  * Add timeout=5 to geoip urlopen to prevent 75s hang on
+    offline/firewalled networks
+
+ -- jongkyung.woo <jkwoo@gooroom.kr>  Wed, 13 May 2026 07:54:09 +0900
+
 live-installer (2026.02.20+grm5u1) gooroom-5.0; urgency=medium
 
   * local package: Release for gooroom-5.0
