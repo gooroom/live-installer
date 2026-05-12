@@ -414,7 +414,7 @@ class InstallerWindow:
         except ImportError:  # py3
             from urllib.request import urlopen
         try:
-            lookup = str(urlopen('http://geoip.ubuntu.com/lookup').read())
+            lookup = str(urlopen('http://geoip.ubuntu.com/lookup', timeout=5).read())
             cur_country_code = re.search('<CountryCode>(.*)</CountryCode>', lookup).group(1)
             cur_timezone = re.search('<TimeZone>(.*)</TimeZone>', lookup).group(1)
             if cur_country_code == 'None': cur_country_code = None
