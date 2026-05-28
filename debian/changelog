@@ -1,3 +1,10 @@
+live-installer (2026.05.28+grm4u1) unstable; urgency=medium
+
+  [ mings ]
+  * [1a5b82ad] Released gooroom 4.5
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 28 May 2026 14:43:24 +0900
+
 live-installer (2025.09.17+grm4u1) unstable; urgency=medium
 
   [ jongkyung.woo ]
