@@ -6,7 +6,7 @@ After=shutdown.target umount.target
 
 [Service]
 Type=oneshot
-ExecStart=/sbin/live-installer-stop
+ExecStart=/usr/sbin/live-installer-stop
 StandardInput=tty-force
 StandardOutput=inherit
 StandardError=inherit
